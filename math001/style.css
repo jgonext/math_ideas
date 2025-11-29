@@ -627,6 +627,42 @@ body {
     text-align: center;
 }
 
+.operation-symbol {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    width: 30px;
+    text-align: center;
+}
+
+/* Multiplication specific styles */
+.multiplication-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.digit-box-flat {
+    width: 45px;
+    height: 55px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    background-color: var(--bg-card);
+}
+
+.operation-symbol-flat {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
 .operation-content {
     display: inline-block;
     margin: 0 auto;
