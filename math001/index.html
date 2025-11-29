@@ -33,6 +33,14 @@
                     <span class="btn-icon">📊</span>
                     <span>Historial de Juegos</span>
                 </button>
+                <button id="btn-leaderboard" class="btn btn-secondary btn-large">
+                    <span class="btn-icon">🏆</span>
+                    <span>Clasificación</span>
+                </button>
+                <button id="btn-reset" class="btn btn-danger btn-large">
+                    <span class="btn-icon">🗑️</span>
+                    <span>Resetear</span>
+                </button>
             </div>
         </div>
     </div>
@@ -50,9 +58,10 @@
                     <label class="setup-label" for="user-code">Código:</label>
                     <input type="text" id="user-code" class="input-field-compact" placeholder="3-5 letras/números"
                         maxlength="5" pattern="[A-Za-z0-9]{3,5}">
-                </div>
-
-                <!-- Avatar Selection - NOW SECOND -->
+                    <div class="recent-users" id="recent-users">
+                        <!-- Recent user links will be inserted here -->
+                    </div>
+                </div><!-- Avatar Selection - NOW SECOND -->
                 <div class="setup-row">
                     <label class="setup-label">Avatar:</label>
                     <div class="avatar-grid-compact" id="avatar-selection">
@@ -168,7 +177,6 @@
                             <th>Puntos</th>
                             <th>Total XP</th>
                             <th>Tiempo</th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="history-list">
@@ -184,9 +192,33 @@
                             <th>Puntos</th>
                             <th>Total XP</th>
                             <th>Tiempo</th>
-                            <th></th>
                         </tr>
                     </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Clasificación -->
+    <div id="leaderboard-screen" class="screen">
+        <div class="container">
+            <button id="btn-back-leaderboard" class="btn-back">← Volver</button>
+
+            <h2 class="screen-title">🏆 Clasificación</h2>
+
+            <div class="leaderboard-container">
+                <table class="leaderboard-table" id="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Posición</th>
+                            <th>Usuario</th>
+                            <th>Total XP</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-list">
+                        <!-- Leaderboard items will be inserted here -->
+                    </tbody>
                 </table>
             </div>
         </div>
