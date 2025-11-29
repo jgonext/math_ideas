@@ -40,6 +40,11 @@ const DIFFICULTY_CONFIG = {
         facil: { operations: 2, count: 2, minDigits: 2, maxDigits: 4 },
         media: { operations: 4, count: 2, minDigits: 4, maxDigits: 6 },
         dificil: { operations: 6, count: 2, minDigits: 8, maxDigits: 8 }
+    },
+    multiplicacion: {
+        facil: { operations: 5, min: 2, max: 9 },
+        media: { operations: 10, min: 2, max: 9 },
+        dificil: { operations: 15, min: 2, max: 9 }
     }
 };
 
@@ -295,6 +300,12 @@ function generateOperations() {
             }
             const result = numbers.reduce((sum, num) => sum + num, 0);
             gameState.game.operations.push({ numbers, result, type: 'suma' });
+        } else if (gameState.game.type === 'multiplicacion') {
+            // Multiplicacion: X x Y (2-9)
+            const num1 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+            const num2 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+            const result = num1 * num2;
+            gameState.game.operations.push({ numbers: [num1, num2], result, type: 'multiplicacion' });
         } else {
             // Resta - ensure positive result
             const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
@@ -315,7 +326,11 @@ function generateOperations() {
 function renderGameScreen() {
     // Render player info
     const playerInfo = document.getElementById('player-info');
-    const typeLabel = gameState.game.type === 'suma' ? 'Suma' : 'Resta';
+    let typeLabel = '';
+    if (gameState.game.type === 'suma') typeLabel = 'Suma';
+    else if (gameState.game.type === 'resta') typeLabel = 'Resta';
+    else typeLabel = 'Tablas multiplicar';
+
     const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
 
     playerInfo.innerHTML = `
@@ -345,39 +360,56 @@ function renderGameScreen() {
 
 // Render Operation Grid
 function renderOperation(operation, opIndex) {
-    const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
     let html = '';
 
-    // Render each number
-    operation.numbers.forEach((num, index) => {
-        const numStr = String(num).padStart(maxDigits, ' ');
-        const symbol = index === 0 ? ' ' : (operation.type === 'suma' ? '+' : '−');
+    if (operation.type === 'multiplicacion') {
+        // Horizontal layout for multiplication: X x Y = [ ][ ]
+        html += '<div class="operation-row multiplication-row">';
+        html += `<div class="digit-box-flat">${operation.numbers[0]}</div>`;
+        html += `<div class="operation-symbol-flat">x</div>`;
+        html += `<div class="digit-box-flat">${operation.numbers[1]}</div>`;
+        html += `<div class="operation-symbol-flat">=</div>`;
 
+        // Always 2 input boxes for multiplication results (up to 81)
+        for (let i = 0; i < 2; i++) {
+            html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" data-op-index="${opIndex}" pattern="[0-9]" inputmode="numeric">`;
+        }
+        html += '</div>';
+    } else {
+        // Vertical layout for Suma/Resta
+        const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
+
+        // Render each number
+        operation.numbers.forEach((num, index) => {
+            const numStr = String(num).padStart(maxDigits, ' ');
+            const symbol = index === 0 ? ' ' : (operation.type === 'suma' ? '+' : '−');
+
+            html += '<div class="operation-row">';
+            html += `<div class="operation-symbol">${symbol}</div>`;
+
+            for (let digit of numStr) {
+                html += `<div class="digit-box">${digit === ' ' ? '' : digit}</div>`;
+            }
+
+            html += '</div>';
+        });
+
+        // Separator line
         html += '<div class="operation-row">';
-        html += `<div class="operation-symbol">${symbol}</div>`;
+        html += '<div class="operation-symbol"></div>';
+        html += `<div class="separator-line" style="width: ${maxDigits * 49}px;"></div>`;
+        html += '</div>';
 
-        for (let digit of numStr) {
-            html += `<div class="digit-box">${digit === ' ' ? '' : digit}</div>`;
+        // Result input row
+        html += '<div class="operation-row">';
+        html += '<div class="operation-symbol"></div>';
+
+        for (let i = 0; i < maxDigits; i++) {
+            html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" data-op-index="${opIndex}" pattern="[0-9]" inputmode="numeric">`;
         }
 
         html += '</div>';
-    });
-
-    // Separator line
-    html += '<div class="operation-row">';
-    html += '<div class="operation-symbol"></div>';
-    html += `<div class="separator-line" style="width: ${maxDigits * 49}px;"></div>`;
-    html += '</div>';
-
-    // Result input row
-    html += '<div class="operation-row">';
-    html += '<div class="operation-symbol"></div>';
-
-    for (let i = 0; i < maxDigits; i++) {
-        html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" data-op-index="${opIndex}" pattern="[0-9]" inputmode="numeric">`;
     }
-
-    html += '</div>';
 
     // Add keyboard navigation after inputs are rendered
     setTimeout(() => {
@@ -386,9 +418,17 @@ function renderOperation(operation, opIndex) {
             // Only allow numbers
             input.addEventListener('input', (e) => {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                // v4: Auto-advance to the LEFT (not right) - more natural for number entry
-                if (e.target.value.length > 0 && index > 0) {
-                    inputs[index - 1].focus();
+
+                if (operation.type === 'multiplicacion') {
+                    // v3: Multiplication uses Left-to-Right navigation (first box then second)
+                    if (e.target.value.length > 0 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                } else {
+                    // v4: Suma/Resta uses Right-to-Left navigation (units first)
+                    if (e.target.value.length > 0 && index > 0) {
+                        inputs[index - 1].focus();
+                    }
                 }
             });
 
@@ -466,7 +506,17 @@ function finishGame() {
 
     // Calculate score
     const totalOps = gameState.game.operations.length;
-    const points = totalCorrect * POINTS_CONFIG[gameState.game.difficulty];
+    let points = 0;
+
+    if (gameState.game.type === 'multiplicacion') {
+        // v3: All or Nothing scoring for multiplication
+        if (totalCorrect === totalOps) {
+            points = POINTS_CONFIG[gameState.game.difficulty];
+        }
+    } else {
+        // Standard scoring for Suma/Resta (per correct answer)
+        points = totalCorrect * POINTS_CONFIG[gameState.game.difficulty];
+    }
 
     // Save to history
     saveToHistory(totalCorrect, totalOps, points);
