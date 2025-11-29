@@ -1,0 +1,485 @@
+// Game State
+const gameState = {
+    currentScreen: 'menu',
+    player: {
+        code: '',
+        avatar: '',
+        avatarName: ''
+    },
+    game: {
+        type: '',
+        difficulty: '',
+        startTime: null,
+        endTime: null,
+        operations: [],
+        userAnswers: []
+    },
+    timer: null
+};
+
+// Avatar Configuration
+const avatars = [
+    { id: 'chick', name: 'Pollito', file: 'avatar_chick_1764422917481.png' },
+    { id: 'cat', name: 'Gatito', file: 'avatar_cat_1764422931277.png' },
+    { id: 'dog', name: 'Perrito', file: 'avatar_dog_1764422945870.png' },
+    { id: 'dolphin', name: 'Delfín', file: 'avatar_dolphin_1764422961172.png' },
+    { id: 'crocodile', name: 'Cocodrilo', file: 'avatar_crocodile_1764422974808.png' },
+    { id: 'hippo', name: 'Hipopótamo', file: 'avatar_hippo_1764422989049.png' },
+    { id: 'lion', name: 'León', file: 'avatar_lion_1764423001361.png' },
+    { id: 'elephant', name: 'Elefante', file: 'avatar_elephant.svg' }
+];
+
+// Constants for difficulty configuration
+const DIFFICULTY_CONFIG = {
+    suma: {
+        facil: { count: 2, minDigits: 2, maxDigits: 4 },
+        media: { count: 3, minDigits: 4, maxDigits: 6 },
+        dificil: { count: 4, minDigits: 8, maxDigits: 8 }
+    },
+    resta: {
+        facil: { count: 2, minDigits: 2, maxDigits: 4 },
+        media: { count: 2, minDigits: 4, maxDigits: 6 },
+        dificil: { count: 2, minDigits: 8, maxDigits: 8 }
+    }
+};
+
+const POINTS_CONFIG = {
+    facil: 1,
+    media: 2,
+    dificil: 5
+};
+
+// Initialize app on load
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+});
+
+function initializeApp() {
+    loadAvatars();
+    attachEventListeners();
+    showScreen('menu');
+}
+
+// Screen Navigation
+function showScreen(screenName) {
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+    document.getElementById(`${screenName}-screen`).classList.add('active');
+    gameState.currentScreen = screenName;
+}
+
+// Load Avatars
+function loadAvatars() {
+    const avatarGrid = document.getElementById('avatar-selection');
+    avatarGrid.innerHTML = '';
+
+    avatars.forEach(avatar => {
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'avatar-option-compact';
+        avatarDiv.dataset.avatarId = avatar.id;
+        avatarDiv.innerHTML = `
+            <img src="assets/${avatar.file}" alt="${avatar.name}" class="avatar-image-compact" title="${avatar.name}">
+        `;
+
+        avatarDiv.addEventListener('click', () => selectAvatar(avatar.id));
+        avatarGrid.appendChild(avatarDiv);
+    });
+}
+
+// Event Listeners
+function attachEventListeners() {
+    // Menu buttons
+    document.getElementById('btn-new-game').addEventListener('click', () => {
+        resetGameSetup();
+        showScreen('setup');
+    });
+    document.getElementById('btn-history').addEventListener('click', () => {
+        loadHistory();
+        showScreen('history');
+    });
+
+    // Setup screen
+    document.getElementById('btn-back-setup').addEventListener('click', () => showScreen('menu'));
+    document.getElementById('user-code').addEventListener('input', (e) => {
+        validateSetup();
+
+        // Pre-select avatar if user code exists in history
+        const userCode = e.target.value.toUpperCase();
+        if (userCode.length >= 3) {
+            const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+            const userGames = history.filter(game => game.userCode === userCode);
+            if (userGames.length > 0) {
+                // Get the most recent game's avatar
+                const lastAvatar = userGames[0].avatar;
+                const avatarFile = lastAvatar.split('/').pop();
+                const avatarId = avatars.find(a => avatarFile.includes(a.id))?.id;
+                if (avatarId) {
+                    selectAvatar(avatarId);
+                }
+            }
+        }
+    });
+    document.getElementById('btn-start-game').addEventListener('click', startGame);
+
+    // Game type and difficulty selection
+    document.querySelectorAll('[data-game-type]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('[data-game-type]').forEach(b => b.classList.remove('selected'));
+            e.currentTarget.classList.add('selected');
+            gameState.game.type = e.currentTarget.dataset.gameType;
+            validateSetup();
+        });
+    });
+
+    document.querySelectorAll('[data-difficulty]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('[data-difficulty]').forEach(b => b.classList.remove('selected'));
+            e.currentTarget.classList.add('selected');
+            gameState.game.difficulty = e.currentTarget.dataset.difficulty;
+            validateSetup();
+        });
+    });
+
+    // Game screen
+    document.getElementById('btn-finish').addEventListener('click', finishGame);
+    document.getElementById('btn-back-game').addEventListener('click', () => {
+        const confirmed = confirm('¿Estás seguro de que quieres volver? Esta partida no se guardará.');
+        if (confirmed) {
+            stopTimer();
+            showScreen('menu');
+        }
+    });
+
+    // Results screen
+    document.getElementById('btn-new-game-results').addEventListener('click', () => {
+        // Restart game with same configuration (don't reset setup)
+        startGame();
+    });
+    document.getElementById('btn-menu-results').addEventListener('click', () => showScreen('menu'));
+
+    // History screen
+    document.getElementById('btn-back-history').addEventListener('click', () => showScreen('menu'));
+}
+
+// Avatar Selection
+function selectAvatar(avatarId) {
+    document.querySelectorAll('.avatar-option-compact').forEach(option => {
+        option.classList.remove('selected');
+    });
+
+    const selected = document.querySelector(`[data-avatar-id="${avatarId}"]`);
+    selected.classList.add('selected');
+
+    const avatar = avatars.find(a => a.id === avatarId);
+    gameState.player.avatar = `assets/${avatar.file}`;
+    gameState.player.avatarName = avatar.name;
+
+    validateSetup();
+}
+
+// Validate Setup Form
+function validateSetup() {
+    const userCode = document.getElementById('user-code').value.toUpperCase();
+    const codeValid = /^[A-Z0-9]{3,5}$/.test(userCode);
+    const avatarValid = gameState.player.avatar !== '';
+    const typeValid = gameState.game.type !== '';
+    const difficultyValid = gameState.game.difficulty !== '';
+
+    gameState.player.code = userCode;
+
+    const startButton = document.getElementById('btn-start-game');
+    startButton.disabled = !(codeValid && avatarValid && typeValid && difficultyValid);
+}
+
+// Reset Game Setup
+function resetGameSetup() {
+    gameState.player = { code: '', avatar: '', avatarName: '' };
+    gameState.game = { type: '', difficulty: '', startTime: null, endTime: null, operations: [], userAnswers: [] };
+
+    document.getElementById('user-code').value = '';
+    document.querySelectorAll('.avatar-option-compact').forEach(option => option.classList.remove('selected'));
+    document.querySelectorAll('[data-game-type]').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('[data-difficulty]').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('btn-start-game').disabled = true;
+}
+
+// Start Game
+function startGame() {
+    generateOperations();
+    renderGameScreen();
+    startTimer();
+    showScreen('game');
+}
+
+// Generate Random Number
+function randomNumber(digits) {
+    const min = Math.pow(10, digits - 1);
+    const max = Math.pow(10, digits) - 1;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Generate Operations Based on Difficulty
+function generateOperations() {
+    const config = DIFFICULTY_CONFIG[gameState.game.type][gameState.game.difficulty];
+    gameState.game.operations = [];
+
+    if (gameState.game.type === 'suma') {
+        const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
+        const numbers = [];
+        for (let i = 0; i < config.count; i++) {
+            numbers.push(randomNumber(digits));
+        }
+        const result = numbers.reduce((sum, num) => sum + num, 0);
+        gameState.game.operations.push({ numbers, result, type: 'suma' });
+    } else {
+        // Resta - ensure positive result
+        const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
+        const num1 = randomNumber(digits);
+        const num2 = randomNumber(Math.min(digits, String(num1).length));
+        const larger = Math.max(num1, num2);
+        const smaller = Math.min(num1, num2);
+        const result = larger - smaller;
+        gameState.game.operations.push({ numbers: [larger, smaller], result, type: 'resta' });
+    }
+}
+
+// Render Game Screen
+function renderGameScreen() {
+    // Render player info
+    const playerInfo = document.getElementById('player-info');
+    const typeLabel = gameState.game.type === 'suma' ? 'Suma' : 'Resta';
+    const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
+
+    playerInfo.innerHTML = `
+        <img src="${gameState.player.avatar}" alt="${gameState.player.avatarName}" class="player-avatar">
+        <div class="player-details">
+            <div class="player-code">${gameState.player.code}</div>
+            <div class="game-info">${typeLabel} - ${diffLabel}</div>
+        </div>
+    `;
+
+    // Render operation
+    const operationContainer = document.getElementById('operation-container');
+    const operation = gameState.game.operations[0];
+
+    operationContainer.innerHTML = renderOperation(operation);
+}
+
+// Render Operation Grid
+function renderOperation(operation) {
+    const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
+    let html = '';
+
+    // Render each number
+    operation.numbers.forEach((num, index) => {
+        const numStr = String(num).padStart(maxDigits, ' ');
+        const symbol = index === 0 ? ' ' : (operation.type === 'suma' ? '+' : '−');
+
+        html += '<div class="operation-row">';
+        html += `<div class="operation-symbol">${symbol}</div>`;
+
+        for (let digit of numStr) {
+            html += `<div class="digit-box">${digit === ' ' ? '' : digit}</div>`;
+        }
+
+        html += '</div>';
+    });
+
+    // Separator line
+    html += '<div class="operation-row">';
+    html += '<div class="operation-symbol"></div>';
+    html += `<div class="separator-line" style="width: ${maxDigits * 49}px;"></div>`;
+    html += '</div>';
+
+    // Result input row
+    html += '<div class="operation-row">';
+    html += '<div class="operation-symbol"></div>';
+
+    for (let i = 0; i < maxDigits; i++) {
+        html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" pattern="[0-9]" inputmode="numeric">`;
+    }
+
+    html += '</div>';
+
+    // Add keyboard navigation after inputs are rendered
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('.digit-input');
+        inputs.forEach((input, index) => {
+            // Only allow numbers
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                // v4: Auto-advance to the LEFT (not right) - more natural for number entry
+                if (e.target.value.length > 0 && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            // Arrow key navigation
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' && index > 0) {
+                    e.preventDefault();
+                    inputs[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                    e.preventDefault();
+                    inputs[index + 1].focus();
+                }
+            });
+        });
+    }, 0);
+
+    return html;
+}
+
+// Timer Functions
+function startTimer() {
+    gameState.game.startTime = Date.now();
+    updateTimerDisplay();
+
+    gameState.timer = setInterval(() => {
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const elapsed = Math.floor((Date.now() - gameState.game.startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+
+    document.getElementById('timer-value').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function stopTimer() {
+    if (gameState.timer) {
+        clearInterval(gameState.timer);
+        gameState.timer = null;
+    }
+    gameState.game.endTime = Date.now();
+}
+
+// Finish Game
+function finishGame() {
+    stopTimer();
+
+    // Get user answer
+    const inputs = document.querySelectorAll('.digit-input');
+    let userAnswer = '';
+    inputs.forEach(input => {
+        userAnswer += input.value || '0';
+    });
+    userAnswer = parseInt(userAnswer);
+
+    const correctAnswer = gameState.game.operations[0].result;
+    const isCorrect = userAnswer === correctAnswer;
+
+    // Calculate score
+    const points = isCorrect ? POINTS_CONFIG[gameState.game.difficulty] : 0;
+
+    // Save to history
+    saveToHistory(isCorrect, points);
+
+    // Show results
+    showResults(isCorrect, points, correctAnswer, userAnswer);
+}
+
+// Show Results
+function showResults(isCorrect, points, correctAnswer, userAnswer) {
+    const resultsSummary = document.getElementById('results-summary');
+    const resultsFeedback = document.getElementById('results-feedback');
+
+    const timeElapsed = Math.floor((gameState.game.endTime - gameState.game.startTime) / 1000);
+    const minutes = Math.floor(timeElapsed / 60);
+    const seconds = timeElapsed % 60;
+    const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    resultsSummary.innerHTML = `
+        <h3>Puntos Obtenidos</h3>
+        <div class="results-score">${points}</div>
+        <p class="results-detail">Tiempo: ${timeStr}</p>
+        <p class="results-detail">Resultado: ${isCorrect ? '¡Correcto! ✅' : 'Incorrecto ❌'}</p>
+    `;
+
+    resultsFeedback.innerHTML = `
+        <div class="feedback-item ${isCorrect ? 'correct' : 'incorrect'}">
+            <span class="feedback-icon">${isCorrect ? '✅' : '❌'}</span>
+            <span class="feedback-text">
+                ${isCorrect ? '¡Excelente trabajo!' : `Respuesta correcta: ${correctAnswer} (Tu respuesta: ${userAnswer})`}
+            </span>
+        </div>
+    `;
+
+    showScreen('results');
+}
+
+// Save to History
+function saveToHistory(isCorrect, points) {
+    const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+
+    const timeElapsed = Math.floor((gameState.game.endTime - gameState.game.startTime) / 1000);
+    const minutes = Math.floor(timeElapsed / 60);
+    const seconds = timeElapsed % 60;
+    const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    // Calculate cumulative points
+    const currentTotal = history.reduce((sum, game) => sum + (game.points || 0), 0);
+    const totalXP = currentTotal + points;
+
+    const gameRecord = {
+        id: Date.now(),
+        date: new Date().toLocaleString('es-ES'),
+        userCode: gameState.player.code,
+        avatar: gameState.player.avatar,
+        type: gameState.game.type === 'suma' ? 'Suma' : 'Resta',
+        difficulty: gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1),
+        score: isCorrect ? 1 : 0,
+        total: 1,
+        points: points,
+        totalXP: totalXP,
+        time: timeStr
+    };
+
+    history.unshift(gameRecord);
+    localStorage.setItem('mathGameHistory', JSON.stringify(history));
+}
+
+// Load History
+function loadHistory() {
+    const historyList = document.getElementById('history-list');
+    const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+
+    if (history.length === 0) {
+        historyList.innerHTML = '<tr><td colspan="9" class="empty-history">No hay juegos guardados todavía. ¡Juega tu primer juego!</td></tr>';
+        return;
+    }
+
+    historyList.innerHTML = '';
+
+    history.forEach(game => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${game.date}</td>
+            <td>${game.userCode}</td>
+            <td>${game.type}</td>
+            <td>${game.difficulty}</td>
+            <td>${game.score} / ${game.total}</td>
+            <td>${game.points} XP</td>
+            <td><strong>${game.totalXP || game.points} XP</strong></td>
+            <td>${game.time}</td>
+            <td><button class="btn-delete" onclick="deleteHistoryItem(${game.id})">🗑️</button></td>
+        `;
+        historyList.appendChild(row);
+    });
+}
+
+// Delete History Item
+function deleteHistoryItem(id) {
+    const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+    const filtered = history.filter(game => game.id !== id);
+
+    // v3: Do NOT recalculate cumulative totals - preserve original XP totals
+    // Total XP should not change when deleting games
+
+    localStorage.setItem('mathGameHistory', JSON.stringify(filtered));
+    loadHistory();
+}

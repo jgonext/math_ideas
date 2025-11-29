@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Matemáticas - Suma y Resta</title>
+    <meta name="description"
+        content="Juego educativo de matemáticas para niños de 8-10 años. Practica suma y resta de forma divertida.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Menu Principal -->
+    <div id="menu-screen" class="screen active">
+        <div class="container">
+            <div class="header-section">
+                <h1 class="main-title">🎮 Juego de Matemáticas</h1>
+                <p class="subtitle">¡Aprende suma y resta jugando!</p>
+            </div>
+
+            <div class="menu-buttons">
+                <button id="btn-new-game" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🎯</span>
+                    <span>Nuevo Juego</span>
+                </button>
+                <button id="btn-history" class="btn btn-secondary btn-large">
+                    <span class="btn-icon">📊</span>
+                    <span>Historial de Juegos</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Configuración del Juego -->
+    <div id="setup-screen" class="screen">
+        <div class="container">
+            <button id="btn-back-setup" class="btn-back">← Volver</button>
+
+            <h2 class="screen-title">Configurar Nuevo Juego</h2>
+
+            <div class="setup-compact">
+                <!-- User Code - NOW FIRST -->
+                <div class="setup-row">
+                    <label class="setup-label" for="user-code">Código:</label>
+                    <input type="text" id="user-code" class="input-field-compact" placeholder="3-5 letras/números"
+                        maxlength="5" pattern="[A-Za-z0-9]{3,5}">
+                </div>
+
+                <!-- Avatar Selection - NOW SECOND -->
+                <div class="setup-row">
+                    <label class="setup-label">Avatar:</label>
+                    <div class="avatar-grid-compact" id="avatar-selection">
+                        <!-- Avatars will be loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Game Type -->
+                <div class="setup-row">
+                    <label class="setup-label">Tipo:</label>
+                    <div class="button-group-compact">
+                        <button class="btn btn-option-compact" data-game-type="suma">
+                            ➕ Suma
+                        </button>
+                        <button class="btn btn-option-compact" data-game-type="resta">
+                            ➖ Resta
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Difficulty Level -->
+                <div class="setup-row">
+                    <label class="setup-label">Nivel:</label>
+                    <div class="button-group-compact">
+                        <button class="btn btn-option-compact" data-difficulty="facil">
+                            😊 Fácil
+                        </button>
+                        <button class="btn btn-option-compact" data-difficulty="media">
+                            😐 Media
+                        </button>
+                        <button class="btn btn-option-compact" data-difficulty="dificil">
+                            😎 Difícil
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-start-game" class="btn btn-primary btn-large" disabled>
+                Comenzar Juego
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Juego -->
+    <div id="game-screen" class="screen">
+        <div class="container">
+            <button id="btn-back-game" class="btn-back">← Volver</button>
+
+            <!-- Game Header -->
+            <div class="game-header">
+                <div class="player-info" id="player-info">
+                    <!-- Player info will be inserted here -->
+                </div>
+                <div class="timer-display" id="timer">
+                    <span class="timer-icon">⏱️</span>
+                    <span id="timer-value">00:00</span>
+                </div>
+            </div>
+
+            <!-- Math Operation Display -->
+            <div class="game-area">
+                <div class="operation-container" id="operation-container">
+                    <!-- Math operation grid will be inserted here -->
+                </div>
+            </div>
+
+            <button id="btn-finish" class="btn btn-primary btn-large">
+                Finalizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Resultados -->
+    <div id="results-screen" class="screen">
+        <div class="container">
+            <h2 class="screen-title">¡Juego Finalizado!</h2>
+
+            <div class="results-summary" id="results-summary">
+                <!-- Results will be inserted here -->
+            </div>
+
+            <div class="results-feedback" id="results-feedback">
+                <!-- Feedback for each operation will be shown here -->
+            </div>
+
+            <div class="button-group">
+                <button id="btn-new-game-results" class="btn btn-primary">
+                    Repite Juego
+                </button>
+                <button id="btn-menu-results" class="btn btn-secondary">
+                    Menú Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Historial -->
+    <div id="history-screen" class="screen">
+        <div class="container">
+            <button id="btn-back-history" class="btn-back">← Volver</button>
+
+            <h2 class="screen-title">Historial de Juegos</h2>
+
+            <div class="history-table-container">
+                <table class="history-table" id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Juego</th>
+                            <th>Nivel</th>
+                            <th>Aciertos</th>
+                            <th>Puntos</th>
+                            <th>Total XP</th>
+                            <th>Tiempo</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-list">
+                        <!-- History items will be inserted here -->
+                    </tbody>
+                    <tfoot id="history-footer">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Juego</th>
+                            <th>Nivel</th>
+                            <th>Aciertos</th>
+                            <th>Puntos</th>
+                            <th>Total XP</th>
+                            <th>Tiempo</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
