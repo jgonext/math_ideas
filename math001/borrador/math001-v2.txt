@@ -1,0 +1,34 @@
+[v1]
+
+Objetivo:
+- Crear en carpeta "math001" una aplicacion web que plantee operaciones de suma y resta
+- Usa lo descrito en math_ideas-v1.txt
+
+---
+
+[v2]
+
+Pantalla "Configurar Nuevo Juego":
+- Hay que compactar los elementos de configuración para evitar que el usuario tenga que scrollar
+- El formato de cada elemento de configuración será lineal:
+	- Opción 1: Selección | Entrada de usuario
+	- Opción 2: Selección | Entrada de usuario
+	- etc
+- Opción "Configurar Nuevo Juego": se quitan los nombres de animales y la imagen del avatar se muestra dentro de un circulo
+
+Pantalla del Juego:
+- Se agrega un botón "Volver" igual que en la pantalla de historial, pero en esta se pide confirmación para volver 
+y en caso afirmativo no se guarda nada esa partida no cuenta.
+
+Pantalla Historial:
+- El listado tiene una cabecera unica al inicio y final del listado, y cada elemento del listado debe ser más compacto
+- Cada elemento del listado muestraba:
+	- Fecha del juego
+	- Codigo usuario
+	- Tipo de juego
+	- Nivel
+	- Aciertos -> X / Y  (ejemplo: 2 / 3)
+	- Puntos obtenidos en ese juego
+	- Total de puntos acumulados en ese momento
+	- Tiempo
+	- Botón para eliminar elemento
