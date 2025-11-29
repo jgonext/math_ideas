@@ -640,5 +640,4 @@ function deleteUserHistory(userCode) {
     }
 }
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', initializeApp);
+
