@@ -32,14 +32,14 @@ const avatars = [
 // Constants for difficulty configuration
 const DIFFICULTY_CONFIG = {
     suma: {
-        facil: { count: 2, minDigits: 2, maxDigits: 4 },
-        media: { count: 3, minDigits: 4, maxDigits: 6 },
-        dificil: { count: 4, minDigits: 8, maxDigits: 8 }
+        facil: { operations: 2, count: 2, minDigits: 2, maxDigits: 4 },
+        media: { operations: 4, count: 3, minDigits: 4, maxDigits: 6 },
+        dificil: { operations: 6, count: 4, minDigits: 8, maxDigits: 8 }
     },
     resta: {
-        facil: { count: 2, minDigits: 2, maxDigits: 4 },
-        media: { count: 2, minDigits: 4, maxDigits: 6 },
-        dificil: { count: 2, minDigits: 8, maxDigits: 8 }
+        facil: { operations: 2, count: 2, minDigits: 2, maxDigits: 4 },
+        media: { operations: 4, count: 2, minDigits: 4, maxDigits: 6 },
+        dificil: { operations: 6, count: 2, minDigits: 8, maxDigits: 8 }
     }
 };
 
@@ -98,6 +98,17 @@ function attachEventListeners() {
         loadHistory();
         showScreen('history');
     });
+    document.getElementById('btn-leaderboard').addEventListener('click', () => {
+        loadLeaderboard();
+        showScreen('leaderboard');
+    });
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        const confirmed = confirm('¿Seguro que quieres borrar todos los datos?');
+        if (confirmed) {
+            localStorage.clear();
+            location.reload();
+        }
+    });
 
     // Setup screen
     document.getElementById('btn-back-setup').addEventListener('click', () => showScreen('menu'));
@@ -144,8 +155,8 @@ function attachEventListeners() {
     // Game screen
     document.getElementById('btn-finish').addEventListener('click', finishGame);
     document.getElementById('btn-back-game').addEventListener('click', () => {
-        const confirmed = confirm('¿Estás seguro de que quieres volver? Esta partida no se guardará.');
-        if (confirmed) {
+        // FIX v6: Only ask confirmation once
+        if (confirm('¿Estás seguro de que quieres volver? Esta partida no se guardará.')) {
             stopTimer();
             showScreen('menu');
         }
@@ -160,6 +171,9 @@ function attachEventListeners() {
 
     // History screen
     document.getElementById('btn-back-history').addEventListener('click', () => showScreen('menu'));
+
+    // Leaderboard screen
+    document.getElementById('btn-back-leaderboard').addEventListener('click', () => showScreen('menu'));
 }
 
 // Avatar Selection
@@ -202,6 +216,53 @@ function resetGameSetup() {
     document.querySelectorAll('[data-game-type]').forEach(btn => btn.classList.remove('selected'));
     document.querySelectorAll('[data-difficulty]').forEach(btn => btn.classList.remove('selected'));
     document.getElementById('btn-start-game').disabled = true;
+
+    // Load recent users
+    loadRecentUsers();
+}
+
+// Load Recent Users
+function loadRecentUsers() {
+    const recentUsersContainer = document.getElementById('recent-users');
+    const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+
+    if (history.length === 0) {
+        recentUsersContainer.innerHTML = '';
+        return;
+    }
+
+    // Get last 3 unique user codes
+    const uniqueUsers = [];
+    const seenCodes = new Set();
+
+    for (const game of history) {
+        if (!seenCodes.has(game.userCode)) {
+            uniqueUsers.push(game.userCode);
+            seenCodes.add(game.userCode);
+        }
+        if (uniqueUsers.length >= 5) break;
+    }
+
+    if (uniqueUsers.length === 0) {
+        recentUsersContainer.innerHTML = '';
+        return;
+    }
+
+    // Create links
+    recentUsersContainer.innerHTML = uniqueUsers.map(code =>
+        `<a href="#" class="recent-user-link" data-code="${code}">${code}</a>`
+    ).join(' ');
+
+    // Add click handlers
+    document.querySelectorAll('.recent-user-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const code = e.target.dataset.code;
+            document.getElementById('user-code').value = code;
+            // Trigger input event to pre-select avatar
+            document.getElementById('user-code').dispatchEvent(new Event('input'));
+        });
+    });
 }
 
 // Start Game
@@ -224,24 +285,30 @@ function generateOperations() {
     const config = DIFFICULTY_CONFIG[gameState.game.type][gameState.game.difficulty];
     gameState.game.operations = [];
 
-    if (gameState.game.type === 'suma') {
-        const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
-        const numbers = [];
-        for (let i = 0; i < config.count; i++) {
-            numbers.push(randomNumber(digits));
+    // Generate multiple operations based on difficulty
+    for (let op = 0; op < config.operations; op++) {
+        if (gameState.game.type === 'suma') {
+            const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
+            const numbers = [];
+            for (let i = 0; i < config.count; i++) {
+                numbers.push(randomNumber(digits));
+            }
+            const result = numbers.reduce((sum, num) => sum + num, 0);
+            gameState.game.operations.push({ numbers, result, type: 'suma' });
+        } else {
+            // Resta - ensure positive result
+            const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
+            const num1 = randomNumber(digits);
+            const num2 = randomNumber(Math.min(digits, String(num1).length));
+            const larger = Math.max(num1, num2);
+            const smaller = Math.min(num1, num2);
+            const result = larger - smaller;
+            gameState.game.operations.push({ numbers: [larger, smaller], result, type: 'resta' });
         }
-        const result = numbers.reduce((sum, num) => sum + num, 0);
-        gameState.game.operations.push({ numbers, result, type: 'suma' });
-    } else {
-        // Resta - ensure positive result
-        const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
-        const num1 = randomNumber(digits);
-        const num2 = randomNumber(Math.min(digits, String(num1).length));
-        const larger = Math.max(num1, num2);
-        const smaller = Math.min(num1, num2);
-        const result = larger - smaller;
-        gameState.game.operations.push({ numbers: [larger, smaller], result, type: 'resta' });
     }
+
+    // Initialize user answers array
+    gameState.game.userAnswers = new Array(config.operations).fill(null);
 }
 
 // Render Game Screen
@@ -259,15 +326,25 @@ function renderGameScreen() {
         </div>
     `;
 
-    // Render operation
+    // Render all operations
     const operationContainer = document.getElementById('operation-container');
-    const operation = gameState.game.operations[0];
+    operationContainer.innerHTML = '';
 
-    operationContainer.innerHTML = renderOperation(operation);
+    gameState.game.operations.forEach((operation, index) => {
+        const opDiv = document.createElement('div');
+        opDiv.className = 'operation-wrapper';
+        opDiv.innerHTML = `
+            <div class="operation-number">Operación ${index + 1}</div>
+            <div class="operation-content" data-op-index="${index}">
+                ${renderOperation(operation, index)}
+            </div>
+        `;
+        operationContainer.appendChild(opDiv);
+    });
 }
 
 // Render Operation Grid
-function renderOperation(operation) {
+function renderOperation(operation, opIndex) {
     const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
     let html = '';
 
@@ -297,14 +374,14 @@ function renderOperation(operation) {
     html += '<div class="operation-symbol"></div>';
 
     for (let i = 0; i < maxDigits; i++) {
-        html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" pattern="[0-9]" inputmode="numeric">`;
+        html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" data-op-index="${opIndex}" pattern="[0-9]" inputmode="numeric">`;
     }
 
     html += '</div>';
 
     // Add keyboard navigation after inputs are rendered
     setTimeout(() => {
-        const inputs = document.querySelectorAll('.digit-input');
+        const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"]`);
         inputs.forEach((input, index) => {
             // Only allow numbers
             input.addEventListener('input', (e) => {
@@ -362,29 +439,44 @@ function stopTimer() {
 function finishGame() {
     stopTimer();
 
-    // Get user answer
-    const inputs = document.querySelectorAll('.digit-input');
-    let userAnswer = '';
-    inputs.forEach(input => {
-        userAnswer += input.value || '0';
-    });
-    userAnswer = parseInt(userAnswer);
+    // Get user answers for all operations
+    const results = [];
+    let totalCorrect = 0;
 
-    const correctAnswer = gameState.game.operations[0].result;
-    const isCorrect = userAnswer === correctAnswer;
+    gameState.game.operations.forEach((operation, opIndex) => {
+        const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"]`);
+        let userAnswer = '';
+        inputs.forEach(input => {
+            userAnswer += input.value || '0';
+        });
+        userAnswer = parseInt(userAnswer);
+
+        const correctAnswer = operation.result;
+        const isCorrect = userAnswer === correctAnswer;
+
+        if (isCorrect) totalCorrect++;
+
+        results.push({
+            opNumber: opIndex + 1,
+            isCorrect,
+            correctAnswer,
+            userAnswer
+        });
+    });
 
     // Calculate score
-    const points = isCorrect ? POINTS_CONFIG[gameState.game.difficulty] : 0;
+    const totalOps = gameState.game.operations.length;
+    const points = totalCorrect * POINTS_CONFIG[gameState.game.difficulty];
 
     // Save to history
-    saveToHistory(isCorrect, points);
+    saveToHistory(totalCorrect, totalOps, points);
 
     // Show results
-    showResults(isCorrect, points, correctAnswer, userAnswer);
+    showResults(results, totalCorrect, totalOps, points);
 }
 
 // Show Results
-function showResults(isCorrect, points, correctAnswer, userAnswer) {
+function showResults(results, totalCorrect, totalOps, points) {
     const resultsSummary = document.getElementById('results-summary');
     const resultsFeedback = document.getElementById('results-feedback');
 
@@ -393,27 +485,34 @@ function showResults(isCorrect, points, correctAnswer, userAnswer) {
     const seconds = timeElapsed % 60;
     const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+    const percentage = Math.round((totalCorrect / totalOps) * 100);
+
     resultsSummary.innerHTML = `
         <h3>Puntos Obtenidos</h3>
         <div class="results-score">${points}</div>
         <p class="results-detail">Tiempo: ${timeStr}</p>
-        <p class="results-detail">Resultado: ${isCorrect ? '¡Correcto! ✅' : 'Incorrecto ❌'}</p>
+        <p class="results-detail">Aciertos: ${totalCorrect} / ${totalOps} (${percentage}%)</p>
     `;
 
-    resultsFeedback.innerHTML = `
-        <div class="feedback-item ${isCorrect ? 'correct' : 'incorrect'}">
-            <span class="feedback-icon">${isCorrect ? '✅' : '❌'}</span>
+    resultsFeedback.innerHTML = '';
+    results.forEach(result => {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `feedback-item ${result.isCorrect ? 'correct' : 'incorrect'}`;
+        feedbackDiv.innerHTML = `
+            <span class="feedback-icon">${result.isCorrect ? '✅' : '❌'}</span>
             <span class="feedback-text">
-                ${isCorrect ? '¡Excelente trabajo!' : `Respuesta correcta: ${correctAnswer} (Tu respuesta: ${userAnswer})`}
+                <strong>Operación ${result.opNumber}:</strong> 
+                ${result.isCorrect ? '¡Correcto!' : `Respuesta correcta: ${result.correctAnswer} (Tu respuesta: ${result.userAnswer})`}
             </span>
-        </div>
-    `;
+        `;
+        resultsFeedback.appendChild(feedbackDiv);
+    });
 
     showScreen('results');
 }
 
 // Save to History
-function saveToHistory(isCorrect, points) {
+function saveToHistory(totalCorrect, totalOps, points) {
     const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
 
     const timeElapsed = Math.floor((gameState.game.endTime - gameState.game.startTime) / 1000);
@@ -421,9 +520,12 @@ function saveToHistory(isCorrect, points) {
     const seconds = timeElapsed % 60;
     const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-    // Calculate cumulative points
-    const currentTotal = history.reduce((sum, game) => sum + (game.points || 0), 0);
-    const totalXP = currentTotal + points;
+    // FIX v6: Calculate cumulative points for THIS USER only
+    // Find the last game of this specific user to get their current total
+    const userCode = gameState.player.code;
+    const userGames = history.filter(game => game.userCode === userCode);
+    const currentUserTotal = userGames.length > 0 ? (userGames[0].totalXP || userGames[0].points) : 0;
+    const totalXP = currentUserTotal + points;
 
     const gameRecord = {
         id: Date.now(),
@@ -432,8 +534,8 @@ function saveToHistory(isCorrect, points) {
         avatar: gameState.player.avatar,
         type: gameState.game.type === 'suma' ? 'Suma' : 'Resta',
         difficulty: gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1),
-        score: isCorrect ? 1 : 0,
-        total: 1,
+        score: totalCorrect,
+        total: totalOps,
         points: points,
         totalXP: totalXP,
         time: timeStr
@@ -449,7 +551,7 @@ function loadHistory() {
     const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
 
     if (history.length === 0) {
-        historyList.innerHTML = '<tr><td colspan="9" class="empty-history">No hay juegos guardados todavía. ¡Juega tu primer juego!</td></tr>';
+        historyList.innerHTML = '<tr><td colspan="8" class="empty-history">No hay juegos guardados todavía. ¡Juega tu primer juego!</td></tr>';
         return;
     }
 
@@ -466,20 +568,77 @@ function loadHistory() {
             <td>${game.points} XP</td>
             <td><strong>${game.totalXP || game.points} XP</strong></td>
             <td>${game.time}</td>
-            <td><button class="btn-delete" onclick="deleteHistoryItem(${game.id})">🗑️</button></td>
         `;
         historyList.appendChild(row);
     });
 }
 
-// Delete History Item
-function deleteHistoryItem(id) {
+// Load Leaderboard
+function loadLeaderboard() {
+    const leaderboardList = document.getElementById('leaderboard-list');
     const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
-    const filtered = history.filter(game => game.id !== id);
 
-    // v3: Do NOT recalculate cumulative totals - preserve original XP totals
-    // Total XP should not change when deleting games
+    if (history.length === 0) {
+        leaderboardList.innerHTML = '<tr><td colspan="4" class="empty-history">No hay juegos todavía. ¡Sé el primero en jugar!</td></tr>';
+        return;
+    }
 
-    localStorage.setItem('mathGameHistory', JSON.stringify(filtered));
-    loadHistory();
+    // Get latest game for each user (history is already sorted by date descending)
+    const userScores = new Map();
+    history.forEach(game => {
+        if (!userScores.has(game.userCode)) {
+            userScores.set(game.userCode, game.totalXP || game.points);
+        }
+    });
+
+    // Convert to array and sort by total XP descending
+    const leaderboard = Array.from(userScores, ([userCode, totalXP]) => ({ userCode, totalXP }))
+        .sort((a, b) => b.totalXP - a.totalXP);
+
+    leaderboardList.innerHTML = '';
+
+    leaderboard.forEach((user, index) => {
+        const row = document.createElement('tr');
+        const position = index + 1;
+        let medal = '';
+        if (position === 1) medal = '🥇';
+        else if (position === 2) medal = '🥈';
+        else if (position === 3) medal = '🥉';
+
+        row.innerHTML = `
+            <td><strong>${medal} ${position}</strong></td>
+            <td><strong>${user.userCode}</strong></td>
+            <td><strong>${user.totalXP} XP</strong></td>
+            <td>
+                <button class="btn-icon-delete" onclick="deleteUserHistory('${user.userCode}')" title="Borrar usuario">
+                    🗑️
+                </button>
+            </td>
+        `;
+
+        // Highlight top 3
+        if (position <= 3) {
+            row.classList.add('top-rank');
+        }
+
+        leaderboardList.appendChild(row);
+    });
 }
+
+// Delete User History
+function deleteUserHistory(userCode) {
+    if (confirm(`¿Estás seguro de que quieres borrar TODOS los datos del usuario ${userCode}?`)) {
+        const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+        const newHistory = history.filter(game => game.userCode !== userCode);
+        localStorage.setItem('mathGameHistory', JSON.stringify(newHistory));
+        loadLeaderboard();
+
+        // If we deleted the current user's data, we might want to reset setup if they are currently selected
+        if (gameState.player.code === userCode) {
+            resetGameSetup();
+        }
+    }
+}
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', initializeApp);
