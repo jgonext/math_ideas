@@ -26,7 +26,7 @@ const avatars = [
     { id: 'crocodile', name: 'Cocodrilo', file: 'avatar_crocodile_1764422974808.png' },
     { id: 'hippo', name: 'Hipopótamo', file: 'avatar_hippo_1764422989049.png' },
     { id: 'lion', name: 'León', file: 'avatar_lion_1764423001361.png' },
-    { id: 'elephant', name: 'Elefante', file: 'avatar_elephant.svg' }
+    { id: 'elephant', name: 'Elefante', file: 'avatar_elephant_v3_1764443799668.png' }
 ];
 
 // Constants for difficulty configuration
