@@ -50,6 +50,11 @@ const DIFFICULTY_CONFIG = {
         facil: { operations: 2, factor1Digits: { min: 2, max: 4 }, factor2Digits: 1 },
         media: { operations: 4, factor1Digits: 6, factor2Digits: 2 },
         dificil: { operations: 6, factor1Digits: 8, factor2Digits: 3 }
+    },
+    division: {
+        facil: { operations: 2, dividendDigits: 4, divisorDigits: 1 },
+        media: { operations: 2, dividendDigits: 5, divisorDigits: 1 },
+        dificil: { operations: 2, dividendDigits: 6, divisorDigits: 1 }
     }
 };
 
@@ -326,6 +331,40 @@ function generateOperations() {
 
             const result = num1 * num2;
             gameState.game.operations.push({ numbers: [num1, num2], result, type: 'multiplica_compleja' });
+        } else if (gameState.game.type === 'division') {
+            // Division: Dividend / Divisor
+            const dividendDigits = config.dividendDigits;
+            const divisor = Math.floor(Math.random() * 8) + 2; // 2-9
+            const dividend = randomNumber(dividendDigits);
+
+            const quotient = Math.floor(dividend / divisor);
+
+            // Calculate intermediate steps for the division process
+            const dividendStr = String(dividend);
+            const intermediateSteps = [];
+            let currentVal = 0;
+
+            for (let i = 0; i < dividendStr.length; i++) {
+                currentVal = currentVal * 10 + parseInt(dividendStr[i]);
+                const digitQuotient = Math.floor(currentVal / divisor);
+                const remainder = currentVal % divisor;
+
+                // Store both the partial quotient and remainder for this step
+                intermediateSteps.push({
+                    partialValue: currentVal,
+                    quotientDigit: digitQuotient,
+                    remainder: remainder
+                });
+
+                currentVal = remainder;
+            }
+
+            gameState.game.operations.push({
+                numbers: [dividend, divisor],
+                result: quotient,
+                intermediateSteps: intermediateSteps,
+                type: 'division'
+            });
         } else {
             // Resta - ensure positive result
             const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
@@ -371,6 +410,7 @@ function renderGameScreen() {
     if (gameState.game.type === 'suma') typeLabel = 'Suma';
     else if (gameState.game.type === 'resta') typeLabel = 'Resta';
     else if (gameState.game.type === 'multiplica_compleja') typeLabel = 'Multiplica';
+    else if (gameState.game.type === 'division') typeLabel = 'Divide';
     else typeLabel = 'Tablas multiplicar';
 
     const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
@@ -506,6 +546,64 @@ function renderOperation(operation, opIndex) {
             html += '</div>';
         }
 
+    } else if (operation.type === 'division') {
+        // Division Layout: v7 specification (Columns)
+        // Left Column: Dividend + Matrix
+        // Right Column: Divisor + Quotient
+
+        const dividendStr = String(operation.numbers[0]);
+        const divisorStr = String(operation.numbers[1]);
+        const quotientStr = String(operation.result);
+
+        // Matrix dimensions: (2 × dividendDigits) rows × dividendDigits columns
+        const matrixRows = 2 * dividendStr.length;
+        const matrixCols = dividendStr.length;
+
+        // Container for the entire division layout (using columns for alignment)
+        html += '<div class="division-container-columns">';
+
+        // Left Column: Dividend and Matrix
+        html += '<div class="division-left-col">';
+
+        // Dividend
+        html += '<div class="division-dividend">';
+        for (let digit of dividendStr) {
+            html += `<div class="digit-box">${digit}</div>`;
+        }
+        html += '</div>';
+
+        // Matrix
+        html += '<div class="division-matrix">';
+        for (let row = 0; row < matrixRows; row++) {
+            html += '<div class="matrix-row">';
+            for (let col = 0; col < matrixCols; col++) {
+                html += `<input type="text" class="digit-input matrix-input" maxlength="1" data-op-index="${opIndex}" data-type="matrix" data-row="${row}" data-col="${col}" pattern="[0-9]" inputmode="numeric">`;
+            }
+            html += '</div>';
+        }
+        html += '</div>';
+
+        html += '</div>'; // End left column
+
+        // Right Column: Divisor and Quotient
+        html += '<div class="division-right-col">';
+
+        // Divisor
+        html += '<div class="division-divisor">';
+        html += `<div class="digit-box">${divisorStr}</div>`;
+        html += '</div>';
+
+        // Quotient
+        html += '<div class="division-quotient">';
+        for (let i = 0; i < quotientStr.length; i++) {
+            html += `<input type="text" class="digit-input" maxlength="1" data-op-index="${opIndex}" data-type="quotient" data-position="${i}" pattern="[0-9]" inputmode="numeric">`;
+        }
+        html += '</div>';
+
+        html += '</div>'; // End right column
+
+        html += '</div>'; // End division container columns
+
     } else {
         // Vertical layout for Suma/Resta
         const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
@@ -571,6 +669,23 @@ function renderOperation(operation, opIndex) {
                     if (e.target.value.length > 0 && currentIndex > 0) {
                         currentInputs[currentIndex - 1].focus();
                     }
+                } else if (operation.type === 'division') {
+                    // Division navigation
+                    if (e.target.dataset.type === 'quotient') {
+                        // Quotient: Left-to-Right navigation
+                        const quotientInputs = Array.from(inputs).filter(inp => inp.dataset.type === 'quotient');
+                        const currentIndex = quotientInputs.indexOf(e.target);
+                        if (e.target.value.length > 0 && currentIndex < quotientInputs.length - 1) {
+                            quotientInputs[currentIndex + 1].focus();
+                        }
+                    } else if (e.target.dataset.type === 'matrix') {
+                        // Matrix: Left-to-Right, then down
+                        const matrixInputs = Array.from(inputs).filter(inp => inp.dataset.type === 'matrix');
+                        const currentIndex = matrixInputs.indexOf(e.target);
+                        if (e.target.value.length > 0 && currentIndex < matrixInputs.length - 1) {
+                            matrixInputs[currentIndex + 1].focus();
+                        }
+                    }
                 } else {
                     // v4: Suma/Resta uses Right-to-Left navigation (units first)
                     if (e.target.value.length > 0 && index > 0) {
@@ -581,12 +696,52 @@ function renderOperation(operation, opIndex) {
 
             // Arrow key navigation
             input.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowLeft' && index > 0) {
-                    e.preventDefault();
-                    inputs[index - 1].focus();
-                } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
-                    e.preventDefault();
-                    inputs[index + 1].focus();
+                if (operation.type === 'division' && e.target.dataset.type === 'matrix') {
+                    // Matrix navigation: arrows move in 2D grid
+                    const matrixInputs = Array.from(inputs).filter(inp => inp.dataset.type === 'matrix');
+                    const currentRow = parseInt(e.target.dataset.row);
+                    const currentCol = parseInt(e.target.dataset.col);
+                    const dividendStr = String(operation.numbers[0]);
+                    const matrixCols = dividendStr.length;
+
+                    if (e.key === 'ArrowLeft' && currentCol > 0) {
+                        e.preventDefault();
+                        const targetInput = matrixInputs.find(inp =>
+                            parseInt(inp.dataset.row) === currentRow &&
+                            parseInt(inp.dataset.col) === currentCol - 1
+                        );
+                        if (targetInput) targetInput.focus();
+                    } else if (e.key === 'ArrowRight' && currentCol < matrixCols - 1) {
+                        e.preventDefault();
+                        const targetInput = matrixInputs.find(inp =>
+                            parseInt(inp.dataset.row) === currentRow &&
+                            parseInt(inp.dataset.col) === currentCol + 1
+                        );
+                        if (targetInput) targetInput.focus();
+                    } else if (e.key === 'ArrowUp' && currentRow > 0) {
+                        e.preventDefault();
+                        const targetInput = matrixInputs.find(inp =>
+                            parseInt(inp.dataset.row) === currentRow - 1 &&
+                            parseInt(inp.dataset.col) === currentCol
+                        );
+                        if (targetInput) targetInput.focus();
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const targetInput = matrixInputs.find(inp =>
+                            parseInt(inp.dataset.row) === currentRow + 1 &&
+                            parseInt(inp.dataset.col) === currentCol
+                        );
+                        if (targetInput) targetInput.focus();
+                    }
+                } else {
+                    // Standard left/right navigation for other types
+                    if (e.key === 'ArrowLeft' && index > 0) {
+                        e.preventDefault();
+                        inputs[index - 1].focus();
+                    } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                        e.preventDefault();
+                        inputs[index + 1].focus();
+                    }
                 }
             });
         });
@@ -673,6 +828,28 @@ function finishGame() {
                 inputs.forEach(input => finalUserAnswer += input.value || '0');
                 userAnswer = parseInt(finalUserAnswer);
             }
+
+            isCorrect = allPartsCorrect;
+
+        } else if (gameState.game.type === 'division') {
+            // Validate Division (Quotient + Matrix)
+            let allPartsCorrect = true;
+
+            // Validate Quotient
+            const quotientInputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"][data-type="quotient"]`);
+            let userQuotient = '';
+            quotientInputs.forEach(input => userQuotient += input.value || '0');
+            userAnswer = parseInt(userQuotient);
+
+            // Check if quotient is correct
+            if (userAnswer !== operation.result) {
+                allPartsCorrect = false;
+            }
+
+            // TODO: Validate intermediate steps matrix
+            // For now, we only validate the quotient
+            // The matrix validation would require comparing user's intermediate steps
+            // with the pre-calculated intermediateSteps in the operation
 
             isCorrect = allPartsCorrect;
 
@@ -774,7 +951,10 @@ function saveToHistory(totalCorrect, totalOps, points) {
         date: new Date().toLocaleString('es-ES'),
         userCode: gameState.player.code,
         avatar: gameState.player.avatar,
-        type: gameState.game.type === 'suma' ? 'Suma' : 'Resta',
+        type: gameState.game.type === 'suma' ? 'Suma' :
+            gameState.game.type === 'resta' ? 'Resta' :
+                gameState.game.type === 'multiplica_compleja' ? 'Multiplica' :
+                    gameState.game.type === 'division' ? 'Divide' : 'Tablas',
         difficulty: gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1),
         score: totalCorrect,
         total: totalOps,
