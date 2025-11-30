@@ -45,6 +45,11 @@ const DIFFICULTY_CONFIG = {
         facil: { operations: 5, min: 2, max: 9 },
         media: { operations: 10, min: 2, max: 9 },
         dificil: { operations: 15, min: 2, max: 9 }
+    },
+    multiplica_compleja: {
+        facil: { operations: 2, factor1Digits: { min: 2, max: 4 }, factor2Digits: 1 },
+        media: { operations: 4, factor1Digits: 6, factor2Digits: 2 },
+        dificil: { operations: 6, factor1Digits: 8, factor2Digits: 3 }
     }
 };
 
@@ -306,6 +311,21 @@ function generateOperations() {
             const num2 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
             const result = num1 * num2;
             gameState.game.operations.push({ numbers: [num1, num2], result, type: 'multiplicacion' });
+        } else if (gameState.game.type === 'multiplica_compleja') {
+            // Multiplica Compleja
+            let num1, num2;
+
+            if (gameState.game.difficulty === 'facil') {
+                const digits1 = Math.floor(Math.random() * (config.factor1Digits.max - config.factor1Digits.min + 1)) + config.factor1Digits.min;
+                num1 = randomNumber(digits1);
+                num2 = randomNumber(config.factor2Digits);
+            } else {
+                num1 = randomNumber(config.factor1Digits);
+                num2 = randomNumber(config.factor2Digits);
+            }
+
+            const result = num1 * num2;
+            gameState.game.operations.push({ numbers: [num1, num2], result, type: 'multiplica_compleja' });
         } else {
             // Resta - ensure positive result
             const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
@@ -316,6 +336,27 @@ function generateOperations() {
             const result = larger - smaller;
             gameState.game.operations.push({ numbers: [larger, smaller], result, type: 'resta' });
         }
+    }
+
+    // Ensure uniqueness for Tablas Multiplicar
+    if (gameState.game.type === 'multiplicacion') {
+        const uniqueOps = new Set();
+        const finalOps = [];
+
+        // Try to generate unique operations
+        let attempts = 0;
+        while (finalOps.length < config.operations && attempts < 100) {
+            const num1 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+            const num2 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+            const key = `${num1}x${num2}`;
+
+            if (!uniqueOps.has(key)) {
+                uniqueOps.add(key);
+                finalOps.push({ numbers: [num1, num2], result: num1 * num2, type: 'multiplicacion' });
+            }
+            attempts++;
+        }
+        gameState.game.operations = finalOps;
     }
 
     // Initialize user answers array
@@ -329,6 +370,7 @@ function renderGameScreen() {
     let typeLabel = '';
     if (gameState.game.type === 'suma') typeLabel = 'Suma';
     else if (gameState.game.type === 'resta') typeLabel = 'Resta';
+    else if (gameState.game.type === 'multiplica_compleja') typeLabel = 'Multiplica';
     else typeLabel = 'Tablas multiplicar';
 
     const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
@@ -375,6 +417,95 @@ function renderOperation(operation, opIndex) {
             html += `<input type="text" class="digit-input" maxlength="1" data-position="${i}" data-op-index="${opIndex}" pattern="[0-9]" inputmode="numeric">`;
         }
         html += '</div>';
+        html += '</div>';
+    } else if (operation.type === 'multiplica_compleja') {
+        // Complex Multiplication Layout
+        const num1Str = String(operation.numbers[0]);
+        const num2Str = String(operation.numbers[1]);
+        const resultStr = String(operation.result);
+
+        // Calculate max width needed (usually result length)
+        const maxDigits = Math.max(num1Str.length, num2Str.length + 1, resultStr.length); // +1 for 'x' symbol space if needed, though we usually put symbol on left
+
+        // Render Factor 1
+        html += '<div class="operation-row right-align">';
+        html += '<div class="operation-symbol"></div>'; // Empty space for symbol column
+        for (let i = 0; i < maxDigits - num1Str.length; i++) html += '<div class="digit-box-empty"></div>';
+        for (let digit of num1Str) html += `<div class="digit-box">${digit}</div>`;
+        html += '</div>';
+
+        // Render Factor 2
+        html += '<div class="operation-row right-align">';
+        html += '<div class="operation-symbol">x</div>';
+        for (let i = 0; i < maxDigits - num2Str.length; i++) html += '<div class="digit-box-empty"></div>';
+        for (let digit of num2Str) html += `<div class="digit-box">${digit}</div>`;
+        html += '</div>';
+
+        // Separator
+        html += '<div class="operation-row right-align">';
+        html += '<div class="operation-symbol"></div>';
+        html += `<div class="separator-line" style="width: ${maxDigits * 49}px;"></div>`;
+        html += '</div>';
+
+        // Partial Products
+        // Iterate digits of factor 2 from right to left
+        for (let i = 0; i < num2Str.length; i++) {
+            const digit2 = parseInt(num2Str[num2Str.length - 1 - i]);
+            const partialProduct = operation.numbers[0] * digit2;
+            const partialStr = String(partialProduct);
+
+            // Indentation (dots)
+            const indentation = i;
+
+            html += '<div class="operation-row right-align">';
+            html += '<div class="operation-symbol"></div>';
+
+            // Calculate padding to align correctly
+            // Total slots = maxDigits
+            // Occupied by digits = partialStr.length
+            // Occupied by dots = indentation
+            // Empty slots on left = maxDigits - partialStr.length - indentation
+
+            for (let j = 0; j < maxDigits - partialStr.length - indentation; j++) {
+                html += '<div class="digit-box-empty"></div>';
+            }
+
+            // Input boxes for the partial product
+            for (let j = 0; j < partialStr.length; j++) {
+                // data-partial-row indicates which partial product row this is
+                html += `<input type="text" class="digit-input" maxlength="1" data-op-index="${opIndex}" data-partial-row="${i}" data-position="${j}" pattern="[0-9]" inputmode="numeric">`;
+            }
+
+            // Dots for indentation
+            for (let j = 0; j < indentation; j++) {
+                html += `<div class="digit-box dot">.</div>`;
+            }
+
+            html += '</div>';
+        }
+
+        // Final Result (only if more than 1 partial product)
+        if (num2Str.length > 1) {
+            // Separator
+            html += '<div class="operation-row right-align">';
+            html += '<div class="operation-symbol"></div>';
+            html += `<div class="separator-line" style="width: ${maxDigits * 49}px;"></div>`;
+            html += '</div>';
+
+            // Result Input
+            html += '<div class="operation-row right-align">';
+            html += '<div class="operation-symbol">+</div>';
+
+            for (let j = 0; j < maxDigits - resultStr.length; j++) {
+                html += '<div class="digit-box-empty"></div>';
+            }
+
+            for (let j = 0; j < resultStr.length; j++) {
+                html += `<input type="text" class="digit-input" maxlength="1" data-op-index="${opIndex}" data-final-result="true" data-position="${j}" pattern="[0-9]" inputmode="numeric">`;
+            }
+            html += '</div>';
+        }
+
     } else {
         // Vertical layout for Suma/Resta
         const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
@@ -423,6 +554,22 @@ function renderOperation(operation, opIndex) {
                     // v3: Multiplication uses Left-to-Right navigation (first box then second)
                     if (e.target.value.length > 0 && index < inputs.length - 1) {
                         inputs[index + 1].focus();
+                    }
+                } else if (operation.type === 'multiplica_compleja') {
+                    // Multiplica Compleja uses Right-to-Left navigation within the same row
+                    // We need to identify inputs in the same row
+                    const currentInputs = Array.from(inputs).filter(inp => {
+                        if (e.target.dataset.partialRow !== undefined) {
+                            return inp.dataset.partialRow === e.target.dataset.partialRow;
+                        } else {
+                            return inp.dataset.finalResult === 'true';
+                        }
+                    });
+
+                    const currentIndex = currentInputs.indexOf(e.target);
+
+                    if (e.target.value.length > 0 && currentIndex > 0) {
+                        currentInputs[currentIndex - 1].focus();
                     }
                 } else {
                     // v4: Suma/Resta uses Right-to-Left navigation (units first)
@@ -484,15 +631,60 @@ function finishGame() {
     let totalCorrect = 0;
 
     gameState.game.operations.forEach((operation, opIndex) => {
-        const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"]`);
+        let isCorrect = false;
         let userAnswer = '';
-        inputs.forEach(input => {
-            userAnswer += input.value || '0';
-        });
-        userAnswer = parseInt(userAnswer);
+        let correctAnswer = operation.result;
 
-        const correctAnswer = operation.result;
-        const isCorrect = userAnswer === correctAnswer;
+        if (gameState.game.type === 'multiplica_compleja') {
+            // Validate complex multiplication
+            let allPartsCorrect = true;
+            const num1 = operation.numbers[0];
+            const num2Str = String(operation.numbers[1]);
+
+            // Validate partial products
+            for (let i = 0; i < num2Str.length; i++) {
+                const digit2 = parseInt(num2Str[num2Str.length - 1 - i]);
+                const expectedPartial = num1 * digit2;
+
+                const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"][data-partial-row="${i}"]`);
+                let partialUserAnswer = '';
+                inputs.forEach(input => partialUserAnswer += input.value || '0');
+
+                if (parseInt(partialUserAnswer) !== expectedPartial) {
+                    allPartsCorrect = false;
+                }
+            }
+
+            // Validate final result if it exists (more than 1 partial product)
+            if (num2Str.length > 1) {
+                const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"][data-final-result="true"]`);
+                let finalUserAnswer = '';
+                inputs.forEach(input => finalUserAnswer += input.value || '0');
+                userAnswer = parseInt(finalUserAnswer); // For display
+
+                if (userAnswer !== operation.result) {
+                    allPartsCorrect = false;
+                }
+            } else {
+                // If only 1 partial product, that IS the result (and we already validated it as partial row 0)
+                // But we need to set userAnswer for display
+                const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"][data-partial-row="0"]`);
+                let finalUserAnswer = '';
+                inputs.forEach(input => finalUserAnswer += input.value || '0');
+                userAnswer = parseInt(finalUserAnswer);
+            }
+
+            isCorrect = allPartsCorrect;
+
+        } else {
+            // Standard validation
+            const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"]`);
+            inputs.forEach(input => {
+                userAnswer += input.value || '0';
+            });
+            userAnswer = parseInt(userAnswer);
+            isCorrect = userAnswer === correctAnswer;
+        }
 
         if (isCorrect) totalCorrect++;
 
