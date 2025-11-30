@@ -920,6 +920,9 @@ function showResults(results, totalCorrect, totalOps, points) {
         feedbackDiv.className = `feedback-item ${result.isCorrect ? 'correct' : 'incorrect'}`;
 
         let feedbackText = '';
+        let correctFormula = '';
+        let userFormula = '';
+
         if (gameState.game.type === 'division') {
             // Division Feedback: Dividend = Divisor * Quotient + Remainder
             const dividend = result.operation.numbers[0];
@@ -927,23 +930,43 @@ function showResults(results, totalCorrect, totalOps, points) {
             const correctQuotient = result.correctAnswer;
             const correctRemainder = dividend % divisor;
 
-            const correctFormula = `${dividend} = ${divisor} * ${correctQuotient} + ${correctRemainder}`;
+            correctFormula = `${dividend} = ${divisor} * ${correctQuotient} + ${correctRemainder}`;
 
-            if (result.isCorrect) {
-                feedbackText = `¡Correcto! ${correctFormula}`;
-            } else {
-                // Calculate user's remainder based on their quotient
-                // Remainder = Dividend - (Divisor * UserQuotient)
-                // Note: This remainder might be negative or larger than divisor if quotient is wrong, but it mathematically satisfies the equation
+            if (!result.isCorrect) {
                 const userQuotient = parseInt(result.userAnswer) || 0;
                 const userRemainder = dividend - (divisor * userQuotient);
-                const userFormula = `${dividend} = ${divisor} * ${userQuotient} + ${userRemainder}`;
-
-                feedbackText = `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula})`;
+                userFormula = `${dividend} = ${divisor} * ${userQuotient} + ${userRemainder}`;
             }
+
+        } else if (gameState.game.type === 'suma') {
+            // Suma Feedback: Num1 + Num2 + ... = Result
+            const nums = result.operation.numbers.join(' + ');
+            correctFormula = `${nums} = ${result.correctAnswer}`;
+            if (!result.isCorrect) {
+                userFormula = `${nums} = ${result.userAnswer}`;
+            }
+
+        } else if (gameState.game.type === 'resta') {
+            // Resta Feedback: Num1 - Num2 = Result
+            const nums = result.operation.numbers.join(' - ');
+            correctFormula = `${nums} = ${result.correctAnswer}`;
+            if (!result.isCorrect) {
+                userFormula = `${nums} = ${result.userAnswer}`;
+            }
+
+        } else if (gameState.game.type === 'multiplicacion' || gameState.game.type === 'multiplica_compleja' || gameState.game.type === 'tablas') {
+            // Multiplica/Tablas Feedback: Factor1 x Factor2 = Result
+            const nums = result.operation.numbers.join(' x ');
+            correctFormula = `${nums} = ${result.correctAnswer}`;
+            if (!result.isCorrect) {
+                userFormula = `${nums} = ${result.userAnswer}`;
+            }
+        }
+
+        if (result.isCorrect) {
+            feedbackText = `¡Correcto! ${correctFormula}`;
         } else {
-            // Standard Feedback
-            feedbackText = result.isCorrect ? '¡Correcto!' : `Respuesta correcta: ${result.correctAnswer} (Tu respuesta: ${result.userAnswer})`;
+            feedbackText = `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula})`;
         }
 
         feedbackDiv.innerHTML = `
