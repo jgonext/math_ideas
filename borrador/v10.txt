@@ -248,6 +248,28 @@ AGREGAR Pantalla "Juego Finalizado":
 	- Incorrecto 	: En el mensaje actual mostrar Dividendo = divisor * Cociente + Resto del que sería correcto, 
 		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Dividendo = divisor * Cociente + Resto de lo que introducido el usuario
 
+---
+
+[v10]
+
+AGREGAR Pantalla "Juego Finalizado":
+- SOLO para Juego Multiplica para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Factor1 x Factor2 = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Factor1 x Factor2 = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Factor1 x Factor2 = Resultado de lo que introdujo el usuario
+- SOLO para Juego Suma para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Numero1 + Numero2 + etc = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Numero1 + Numero2 + etc = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Numero1 + Numero2 + etc = Resultado de lo que introdujo el usuario
+- SOLO para Juego Resta para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Numero1 - Numero2 = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Numero1 - Numero2 = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar v de lo que introdujo el usuario
+- SOLO para Juego Tablas multiplicar para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Factor1 x Factor2 = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Factor1 x Factor2 = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Factor1 x Factor2 = Resultado de lo que introdujo el usuario
+
 --- 
 
 Propuestas a futuro:
