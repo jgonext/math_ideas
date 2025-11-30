@@ -728,11 +728,31 @@ body {
     background: #ffe6e6;
 }
 
+.digit-box-empty {
+    width: 45px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.digit-box.dot {
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+}
+
 .separator-line {
     height: 3px;
     background: var(--text-primary);
     margin: var(--spacing-xs) 0;
     border-radius: 2px;
+}
+
+.right-align {
+    justify-content: flex-end;
 }
 
 /* Results Screen */
