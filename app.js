@@ -191,6 +191,32 @@ function attachEventListeners() {
     document.getElementById('btn-back-leaderboard').addEventListener('click', () => showScreen('menu'));
 }
 
+// Reset Game Setup
+function resetGameSetup() {
+    gameState.player = { code: '', avatar: '', avatarName: '' };
+    gameState.game = { type: '', difficulty: '', startTime: null, endTime: null, operations: [], userAnswers: [] };
+
+    document.getElementById('user-code').value = '';
+    document.querySelectorAll('.avatar-option-compact').forEach(option => option.classList.remove('selected'));
+    document.querySelectorAll('[data-game-type]').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('[data-difficulty]').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('btn-start-game').disabled = true;
+
+    // Load recent users
+    loadRecentUsers();
+
+    // v11: Pre-fill with last user code if available
+    const history = JSON.parse(localStorage.getItem('mathGameHistory') || '[]');
+    if (history.length > 0) {
+        const lastUserCode = history[0].userCode;
+        if (lastUserCode) {
+            document.getElementById('user-code').value = lastUserCode;
+            // Trigger input event to validate and load avatar
+            document.getElementById('user-code').dispatchEvent(new Event('input'));
+        }
+    }
+}
+
 // Avatar Selection
 function selectAvatar(avatarId) {
     document.querySelectorAll('.avatar-option-compact').forEach(option => {
@@ -221,21 +247,6 @@ function validateSetup() {
     startButton.disabled = !(codeValid && avatarValid && typeValid && difficultyValid);
 }
 
-// Reset Game Setup
-function resetGameSetup() {
-    gameState.player = { code: '', avatar: '', avatarName: '' };
-    gameState.game = { type: '', difficulty: '', startTime: null, endTime: null, operations: [], userAnswers: [] };
-
-    document.getElementById('user-code').value = '';
-    document.querySelectorAll('.avatar-option-compact').forEach(option => option.classList.remove('selected'));
-    document.querySelectorAll('[data-game-type]').forEach(btn => btn.classList.remove('selected'));
-    document.querySelectorAll('[data-difficulty]').forEach(btn => btn.classList.remove('selected'));
-    document.getElementById('btn-start-game').disabled = true;
-
-    // Load recent users
-    loadRecentUsers();
-}
-
 // Load Recent Users
 function loadRecentUsers() {
     const recentUsersContainer = document.getElementById('recent-users');
@@ -246,7 +257,7 @@ function loadRecentUsers() {
         return;
     }
 
-    // Get last 3 unique user codes
+    // Get last 5 unique user codes
     const uniqueUsers = [];
     const seenCodes = new Set();
 
@@ -286,6 +297,13 @@ function startGame() {
     renderGameScreen();
     startTimer();
     showScreen('game');
+    // v11: Scroll operation container to top
+    setTimeout(() => {
+        const container = document.getElementById('operation-container');
+        if (container) {
+            container.scrollTop = 0;
+        }
+    }, 0);
 }
 
 // Generate Random Number
@@ -837,19 +855,56 @@ function finishGame() {
 
             // Validate Quotient
             const quotientInputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"][data-type="quotient"]`);
-            let userQuotient = '';
-            quotientInputs.forEach(input => userQuotient += input.value || '0');
-            userAnswer = parseInt(userQuotient);
+            let userQuotientStr = '';
+            quotientInputs.forEach(input => userQuotientStr += input.value || '');
 
-            // Check if quotient is correct
-            if (userAnswer !== operation.result) {
+            // If empty quotient, it's wrong
+            if (userQuotientStr === '') {
                 allPartsCorrect = false;
+                userAnswer = 0;
+            } else {
+                userAnswer = parseInt(userQuotientStr);
+                if (userAnswer !== operation.result) {
+                    allPartsCorrect = false;
+                }
             }
 
-            // TODO: Validate intermediate steps matrix
-            // For now, we only validate the quotient
-            // The matrix validation would require comparing user's intermediate steps
-            // with the pre-calculated intermediateSteps in the operation
+            // Validate Matrix (Check for correct Remainder)
+            // Strategy: Find the last row with content and verify it matches the expected remainder
+            const dividend = operation.numbers[0];
+            const divisor = operation.numbers[1];
+            const expectedRemainder = dividend % divisor;
+
+            let matrixRemainder = null;
+            const matrixRows = 2 * String(dividend).length; // Based on render logic
+
+            // Scan rows from bottom to top to find the last entered number
+            for (let row = matrixRows - 1; row >= 0; row--) {
+                const rowInputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"][data-type="matrix"][data-row="${row}"]`);
+                let rowContent = '';
+                let hasContent = false;
+
+                rowInputs.forEach(input => {
+                    if (input.value) {
+                        rowContent += input.value;
+                        hasContent = true;
+                    }
+                });
+
+                if (hasContent) {
+                    // Found the last row with content
+                    // Check if it's a number (ignore rows that might just have '-' if we had them, but inputs are numeric only)
+                    if (!isNaN(parseInt(rowContent))) {
+                        matrixRemainder = parseInt(rowContent);
+                        break;
+                    }
+                }
+            }
+
+            // If no remainder found in matrix, or it doesn't match expected
+            if (matrixRemainder === null || matrixRemainder !== expectedRemainder) {
+                allPartsCorrect = false;
+            }
 
             isCorrect = allPartsCorrect;
 
