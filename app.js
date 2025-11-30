@@ -869,7 +869,8 @@ function finishGame() {
             opNumber: opIndex + 1,
             isCorrect,
             correctAnswer,
-            userAnswer
+            userAnswer,
+            operation: operation // Pass the full operation object for detailed feedback
         });
     });
 
@@ -917,11 +918,39 @@ function showResults(results, totalCorrect, totalOps, points) {
     results.forEach(result => {
         const feedbackDiv = document.createElement('div');
         feedbackDiv.className = `feedback-item ${result.isCorrect ? 'correct' : 'incorrect'}`;
+
+        let feedbackText = '';
+        if (gameState.game.type === 'division') {
+            // Division Feedback: Dividend = Divisor * Quotient + Remainder
+            const dividend = result.operation.numbers[0];
+            const divisor = result.operation.numbers[1];
+            const correctQuotient = result.correctAnswer;
+            const correctRemainder = dividend % divisor;
+
+            const correctFormula = `${dividend} = ${divisor} * ${correctQuotient} + ${correctRemainder}`;
+
+            if (result.isCorrect) {
+                feedbackText = `¡Correcto! ${correctFormula}`;
+            } else {
+                // Calculate user's remainder based on their quotient
+                // Remainder = Dividend - (Divisor * UserQuotient)
+                // Note: This remainder might be negative or larger than divisor if quotient is wrong, but it mathematically satisfies the equation
+                const userQuotient = parseInt(result.userAnswer) || 0;
+                const userRemainder = dividend - (divisor * userQuotient);
+                const userFormula = `${dividend} = ${divisor} * ${userQuotient} + ${userRemainder}`;
+
+                feedbackText = `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula})`;
+            }
+        } else {
+            // Standard Feedback
+            feedbackText = result.isCorrect ? '¡Correcto!' : `Respuesta correcta: ${result.correctAnswer} (Tu respuesta: ${result.userAnswer})`;
+        }
+
         feedbackDiv.innerHTML = `
             <span class="feedback-icon">${result.isCorrect ? '✅' : '❌'}</span>
             <span class="feedback-text">
                 <strong>Operación ${result.opNumber}:</strong> 
-                ${result.isCorrect ? '¡Correcto!' : `Respuesta correcta: ${result.correctAnswer} (Tu respuesta: ${result.userAnswer})`}
+                ${feedbackText}
             </span>
         `;
         resultsFeedback.appendChild(feedbackDiv);
