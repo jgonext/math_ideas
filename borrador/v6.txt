@@ -1,0 +1,198 @@
+
+[v1] inicial
+
+Objetivo:
+- Crear varias aplicaciones web que planteen operaciones matemáticas para niños de 5 a 15 años.
+- Aunque en este momento hay que enfocarse en edades de 8 a 10.
+- Los Juegos de operaciones (suma, resta, etc) deben permitir que el niño aprenda todo el proceso de la operación, no solo poner el resultado sin más.
+- Se presenta como un juego, basado en sistema de gamificación que premia a los niños con puntos de experiencia X
+
+Ideas para juegos o Tipos de juego:
+- Juego de la suma
+- Juego de la resta
+- Juego de la multiplicación
+- Juego de la división
+- Tablas de multiplicar, del 2 a la del 9
+- Números romanos
+
+Pantallas:
+- "Menú" pantalla de selección de opciones: "Nuevo juego" | "Historial juegos"
+- "Nuevo juego" pantalla previa al juego donde se pide en "Nuevo juego en General"
+- "Historial juegos" pantalla que muestra un listado de resultados de juegos pasados
+	
+Estética y Comportamiento en Juegos de operaciones:
+- visualmente el juego debe plantear la operación (enunciado no editable y respuesta del usuario editable) como una hoja cuadrilla donde cada "linea" de numeros va aliniada con la siguiente
+- cada numero irá en un cuadro tanto el en enunciado (no editable) como el espacio de respuesta (editable por el usuario) y los espacios/cuadros deben coincidir para que no sea confuso para el usuario.
+- IMPORTANTE: Cada linia y cuadro debe estar alineada de forma coherente con la siguiente linia y cuadro. Por ejemplo:
+	- Suma:
+		 1234
+		+1111
+		 ----
+		 2345
+	- Multiplicación
+		 4321
+		x  13
+		-----
+		12963
+	   +4321·
+		-----
+		56173
+
+"Historial juegos":
+- Importante que se guarde en navegador, es decir, que si se cierra y se vuelve abrir aún sea accesible esa información
+- Presenta historial de resultados de juegos ordenado descendentemente por fecha de juego
+- Cada elemento del listado muestra:
+	- Fecha del juego
+	- Codigo usuario
+	- Tipo de juego
+	- Nivel
+	- Aciertos -> X / Y  (ejemplo: 2 / 3)
+	- Tiempo
+	- Botón para eliminar elemento
+
+"Nuevo juego" se pide al usuario:
+- Seleccion de avatar preconfigurados que seran tipo imagenes kawaii de animales: pollito tipo felix, gatito, perrito, delfin, cocodrilo, hipopotamo, leon, elefante
+- Un codigo de min 3 y max 5 letras mayusculas y/o numeros que identifica al usuario.
+- Tipo de juego; ver tipos de juego.
+- Dificultad: Fácil | Media | Difícil
+- La dificultad afecta a la cantidad de elementos/operaciones y complejidad por cada elemento/operación, que irá tb en función del tipo de juego.
+
+Funcionamiento del Juego en general:
+- Se presenta la pantalla con la info de usuario arriba y centrado
+- Se presenta el enunciado del juego que irá en función del tipo de juego
+- Se inicia contador de tiempo que será visible tb arriba en esquina derecha 
+- Existe un botón "Finalizar" que indica que el usuario decide terminar el juego
+- Cuando se termina el juego:
+	- Muestra mensaje por cada elemento: "Correcto" si esta acabado y bien, "Incorrecto" en otro caso
+	- El usuario adquiere puntos:
+		- 1 punto por cada elemento correcto en modo Fácil
+		- 2 puntos por cada elemento correcto en modo Medio
+		- 5 puntos por cada elemento correcto en modo Dificil
+
+Funcionamiento del Juego para Suma:
+- Se plantea como operación Suma de varios numeros de X digitos
+- Si dificultad:
+	- Fácil: 2 numeros de 2 a 4 digitos
+	- Media: 3 numeros de 4 a 6 digitos
+	- Difícil: 4 numeros de 8 digitos
+
+---
+
+[v2]
+
+ACTUALIZACIÓN Funcionamiento del Juego para Suma:
+- Se plantea como operación Suma de varios numeros de X digitos
+- Si dificultad:
+	- Fácil: 	2 operaciones; cada operación -> 2 numeros de 2 a 4 digitos
+	- Media: 	4 operaciones; cada operación -> 3 numeros de 4 a 6 digitos
+	- Difícil: 	6 operaciones; cada operación -> 4 numeros de 8 digitos
+
+ACTUALIZACIÓN Funcionamiento del Juego para Resta:
+- Se plantea como operación Resta de varios numeros de X digitos
+- El primer numero es mayor que el segundo
+- Si dificultad:
+	- Fácil: 	2 operaciones; cada operación -> 2 numeros de 2 a 4 digitos
+	- Media: 	4 operaciones; cada operación -> 2 numeros de 4 a 6 digitos
+	- Difícil: 	6 operaciones; cada operación -> 2 numeros de 8 digitos
+
+---
+
+[v3]
+
+AGREGAR Nuevo Juego llamado Tablas multiplicar:
+- El proceso de configuración es el mismo que el de los juegos anteriores
+- Al iniciar el juego, se muestra un listado de 1 número (1 digito) multiplicado por otro (1 digito)
+- Los números X y Y son aleatorios, pero iran del 2 al 9
+- Por cada elemento del listado:
+	- donde se muestra: X x Y = Z
+	- donde X x Y es enunciado (solo lectura); X un cuadro "x" Y otro cuadro
+	- donde Z es respuesta (editable) que serán 2 cuadros; en cada cuadro solo se acepta 1 numero de 1 digito; el orden de introducción es primer cuadro luego el segundo; flecha izquierda desplaza al cuadro anterior, derecha posterior 
+- Si dificultad:
+	- Fácil: 	5  elementos
+	- Media: 	10 elementos
+	- Difícil: 	15 elementos
+- Cuando se termina este juego:
+	- Muestra mensaje por cada elemento: "Correcto" si esta acabado y bien, "Incorrecto" en otro caso
+	- El usuario adquiere puntos:
+		- 1 punto si TODOS los elementos son correctos en modo Fácil
+		- 2 puntos si TODOS los elementos son correctos en modo Medio
+		- 5 puntos si TODOS los elementos son correctos en modo Dificil
+
+---
+
+[v4]
+
+MODIFICAR Menú:
+- En opción "Tipo" en el Juego Tablas multiplicar hay que cambiar el icono de "X" por algo que recuerde a unas tablas.
+
+MODIFICAR en Juego Tablas multiplicar:
+- Controlar que no se repite enunciado en el listado de operaciones.
+
+AGREGAR Nuevo Juego llamado Multiplica:
+- En el menú agregarlo en "Tipo" con icono "X".
+- El proceso de configuración es el mismo que el de los juegos anteriores
+- Al iniciar el juego, se muestra un listado de multiplicaciones; el numero de operaciones irá en función de la dificultad
+- Cada elemento consta de un numero multiplicado por otro (primer factor por segundo factor); el numero de digitos irá en función de la dificultad
+- Si dificultad:
+	- Fácil: 	2 operaciones; cada operación -> primer numero de 2 a 4 digitos, segundo numero de 1 digito
+	- Media: 	4 operaciones; cada operación -> primer numero de 6 digitos, segundo numero de 2 digitos
+	- Difícil: 	6 operaciones; cada operación -> primer numero de 8 digitos, segundo numero de 3 digitos
+- Por cada multiplicación:
+	- Se presenta el enunciado como dos filas de cuadros (no editables) que corresponderán a los numeros de los dos factores
+	- Debajo, se presenta la respuesta del usuario, tantas filas de cuadros (editables) como digitos tenga el segundo factor
+	- Cada cuadro solo acepta 1 numero, y una vez introducido debe desplazar el cursor a la izquierda (si existe otro cuadro a la izquierda)
+	- Si el usuario pulsa flecha izquierda se desplaza el cursor un cuadro a la izquierda (si puede), idem con flecha derecha
+	- Teniendo en cuenta el segundo factor, las filas deben ir identadas por el lado derecho en función del orden de digitos del segundo factor: 
+		- Si es primer digito empezando por la derecha, no hay identación
+		- Si es segundo digito empezando por la derecha, se identa por la derecha 1 cuadro no editable (".")
+		- Si es tercer digito empezando por la derecha, se identa por la derecha 2 cuadros no editables ("..")
+		- etc
+	- Debajo, se agrega la lista de cuadros editable para que el usuario pueda introducir la suma de las filas anteriores, dando así con el resultado final de la multiplicación
+	- Ejemplo:
+		 1234
+		x  21
+		-----
+		 1234
+		2468·
+		-----
+		25914
+
+---
+
+[v5]
+
+FIX Juego multiplica:
+- Los cuadros de enunciado y respuesta deben estar aliniados a la derecha
+- Todos los cuadros deben estar aliniados tb verticalmente teniendo en cuenta las identaciones
+
+---
+
+[v6]
+
+AGREGAR Nuevo Juego llamado Divide:
+- En el menú agregarlo en "Tipo" con icono "÷".
+- El proceso de configuración es el mismo que el de los juegos anteriores
+- Al iniciar el juego, se muestra un listado de divisiones; el numero de operaciones irá en función de la dificultad
+- Cada elemento consta de un numero dividido por otro (Dividendo entre divisor); el numero de digitos irá en función de la dificultad
+- Si dificultad:
+	- Fácil: 	2 operaciones; cada operación -> Dividendo es numero de 4 digitos, divisor numero de 1 digito
+	- Media: 	2 operaciones; cada operación -> Dividendo es numero de 5 digitos, divisor numero de 1 digito
+	- Difícil: 	2 operaciones; cada operación -> Dividendo es numero de 6 digitos, divisor numero de 1 digito
+- Por cada division: 
+	- Se muestra el enunciado de la division (Dividendo entre divisor), como listas de cuadros (no editables), como en la imagen v6_divide_1_de_2.jpg
+	- Debajo vendrá la respuesta del usuario, como listas de cuadros (editables):
+		- Debajo del Dividendo vendrá el Cociente, como lista de cuadros (editables) tantos como digitos tenga el resultado entero de la division
+			- El usuario debe introducir el cociente en el orden correcto, comenzando por la primera cifra del cociente de izquierda a derecha
+			- Si el usuario pulsa flecha izquierda se desplaza el cursor un cuadro a la izquierda (si puede), idem con flecha derecha
+		- Debajo del Divisor los pasos intermedios de la division, como matriz de cuadros (editables) de X filas y Y columnas, donde X es el doble delnumero de digitos del Divisor y Y es de numero de digitos del Divisor.
+			- Los pasos intermedios se van introduciendo en la matriz de cuadros, comenzando por la primera fila y la primera columna, de izquierda a derecha y de arriba hacia abajo.
+			- Si el usuario pulsa flecha izquierda se desplaza el cursor un cuadro a la izquierda (si puede), idem con flecha derecha
+			- Si el usuario pulsa flecha arriba se desplaza el cursor una fila arriba (si puede), idem con flecha abajo
+
+--- 
+
+Propuestas a futuro:
+- Mejorar el sistema de Recompensas
+- Incorporar otros Avatar de usuario
+
+

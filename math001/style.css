@@ -1043,3 +1043,71 @@ body {
 .animate-bounce {
     animation: bounce 0.6s ease infinite;
 }
+
+/* Division Game Styles - v7 Layout (Columns) */
+.division-container-columns {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.division-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: flex-end;
+    /* Align dividend and matrix to the right of the left column */
+}
+
+.division-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+    /* Align divisor and quotient to the left of the right column */
+}
+
+.division-dividend {
+    display: flex;
+    gap: 4px;
+    padding-right: var(--spacing-sm);
+    /* Spacing from the separator line */
+}
+
+.division-divisor {
+    display: flex;
+    padding: 0 var(--spacing-sm) var(--spacing-sm) var(--spacing-sm);
+    border-left: 3px solid var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+    border-radius: 0 0 0 var(--radius-sm);
+    /* L-shape border */
+    background: transparent;
+    margin-bottom: 4px;
+}
+
+.division-quotient {
+    display: flex;
+    gap: 4px;
+    padding-left: var(--spacing-sm);
+}
+
+.division-matrix {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--spacing-sm);
+    /* Removed border/background for cleaner look, or keep if desired */
+    /* border: 1px dashed var(--border-color); */
+}
+
+.matrix-row {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    /* Align matrix rows to the right to match dividend digits */
+}
+
+.matrix-input {
+    background: white;
+}
