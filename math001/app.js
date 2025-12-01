@@ -51,6 +51,11 @@ const DIFFICULTY_CONFIG = {
         media: { operations: 4, factor1Digits: 6, factor2Digits: 2 },
         dificil: { operations: 6, factor1Digits: 8, factor2Digits: 3 }
     },
+    division_2dg: {
+        facil: { operations: 2, dividendDigits: 4, divisorMin: 11, divisorMax: 29 },
+        media: { operations: 3, dividendDigits: 6, divisorMin: 21, divisorMax: 59 },
+        dificil: { operations: 4, dividendDigits: 8, divisorMin: 31, divisorMax: 89 }
+    },
     division: {
         facil: { operations: 2, dividendDigits: 4, divisorDigits: 1 },
         media: { operations: 2, dividendDigits: 5, divisorDigits: 1 },
@@ -313,6 +318,11 @@ function randomNumber(digits) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Random integer in [min, max]
+function randomInRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // Generate Operations Based on Difficulty
 function generateOperations() {
     const config = DIFFICULTY_CONFIG[gameState.game.type][gameState.game.difficulty];
@@ -383,6 +393,37 @@ function generateOperations() {
                 intermediateSteps: intermediateSteps,
                 type: 'division'
             });
+        } else if (gameState.game.type === 'division_2dg') {
+            // Division 2 dígitos: mismo flujo que Divide pero con divisor 2 dígitos
+            const dividendDigits = config.dividendDigits;
+            const divisor = randomInRange(config.divisorMin, config.divisorMax);
+            const dividend = randomNumber(dividendDigits);
+            const quotient = Math.floor(dividend / divisor);
+
+            const dividendStr = String(dividend);
+            const intermediateSteps = [];
+            let currentVal = 0;
+
+            for (let i = 0; i < dividendStr.length; i++) {
+                currentVal = currentVal * 10 + parseInt(dividendStr[i]);
+                const digitQuotient = Math.floor(currentVal / divisor);
+                const remainder = currentVal % divisor;
+
+                intermediateSteps.push({
+                    partialValue: currentVal,
+                    quotientDigit: digitQuotient,
+                    remainder: remainder
+                });
+
+                currentVal = remainder;
+            }
+
+            gameState.game.operations.push({
+                numbers: [dividend, divisor],
+                result: quotient,
+                intermediateSteps: intermediateSteps,
+                type: 'division_2dg'
+            });
         } else {
             // Resta - ensure positive result
             const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
@@ -429,6 +470,7 @@ function renderGameScreen() {
     else if (gameState.game.type === 'resta') typeLabel = 'Resta';
     else if (gameState.game.type === 'multiplica_compleja') typeLabel = 'Multiplica';
     else if (gameState.game.type === 'division') typeLabel = 'Divide';
+    else if (gameState.game.type === 'division_2dg') typeLabel = 'Divide 2dg';
     else typeLabel = 'Tablas multiplicar';
 
     const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
@@ -564,7 +606,7 @@ function renderOperation(operation, opIndex) {
             html += '</div>';
         }
 
-    } else if (operation.type === 'division') {
+    } else if (operation.type === 'division' || operation.type === 'division_2dg') {
         // Division Layout: v7 specification (Columns)
         // Left Column: Dividend + Matrix
         // Right Column: Divisor + Quotient
@@ -608,7 +650,9 @@ function renderOperation(operation, opIndex) {
 
         // Divisor
         html += '<div class="division-divisor">';
-        html += `<div class="digit-box">${divisorStr}</div>`;
+        for (let digit of divisorStr) {
+            html += `<div class="digit-box">${digit}</div>`;
+        }
         html += '</div>';
 
         // Quotient
@@ -687,7 +731,7 @@ function renderOperation(operation, opIndex) {
                     if (e.target.value.length > 0 && currentIndex > 0) {
                         currentInputs[currentIndex - 1].focus();
                     }
-                } else if (operation.type === 'division') {
+                } else if (operation.type === 'division' || operation.type === 'division_2dg') {
                     // Division navigation
                     if (e.target.dataset.type === 'quotient') {
                         // Quotient: Left-to-Right navigation
@@ -714,7 +758,7 @@ function renderOperation(operation, opIndex) {
 
             // Arrow key navigation
             input.addEventListener('keydown', (e) => {
-                if (operation.type === 'division' && e.target.dataset.type === 'matrix') {
+                if ((operation.type === 'division' || operation.type === 'division_2dg') && e.target.dataset.type === 'matrix') {
                     // Matrix navigation: arrows move in 2D grid
                     const matrixInputs = Array.from(inputs).filter(inp => inp.dataset.type === 'matrix');
                     const currentRow = parseInt(e.target.dataset.row);
@@ -849,7 +893,7 @@ function finishGame() {
 
             isCorrect = allPartsCorrect;
 
-        } else if (gameState.game.type === 'division') {
+        } else if (gameState.game.type === 'division' || gameState.game.type === 'division_2dg') {
             // Validate Division (Quotient + Matrix)
             let allPartsCorrect = true;
 
@@ -978,7 +1022,7 @@ function showResults(results, totalCorrect, totalOps, points) {
         let correctFormula = '';
         let userFormula = '';
 
-        if (gameState.game.type === 'division') {
+        if (gameState.game.type === 'division' || gameState.game.type === 'division_2dg') {
             // Division Feedback: Dividend = Divisor * Quotient + Remainder
             const dividend = result.operation.numbers[0];
             const divisor = result.operation.numbers[1];
@@ -1061,7 +1105,8 @@ function saveToHistory(totalCorrect, totalOps, points) {
         type: gameState.game.type === 'suma' ? 'Suma' :
             gameState.game.type === 'resta' ? 'Resta' :
                 gameState.game.type === 'multiplica_compleja' ? 'Multiplica' :
-                    gameState.game.type === 'division' ? 'Divide' : 'Tablas',
+                    gameState.game.type === 'division' ? 'Divide' :
+                        gameState.game.type === 'division_2dg' ? 'Divide 2dg' : 'Tablas',
         difficulty: gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1),
         score: totalCorrect,
         total: totalOps,

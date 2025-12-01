@@ -226,10 +226,79 @@ MODIFICAR Nuevo Juego llamado Divide:
     Dividendo = divisor * Cociente + Resto
     14029     = 2		* 7014	   + 1
 
+---
+
+[v8]
+
+FIX Juego Divide:
+- A veces no funciona, creo que tiene que ver con que la division de un resultado entero (Resto=0) o decimal (Resto<>0)
+- Ejemplo de una división planteada por la aplicación: 8709 / 9
+	- El resultado real (dado por calculadora) es: 967,67; el Resto es 6
+	- La aplicación plantea un Cociente con 4 cuadros, esto ya confunde porque no tratamos decimales
+	- Luego al finalizar la aplicación dice que es incorrecto, que el resultado según la aplicación es: 9670; que no es correcto
+- En las imagenes "v8_div01a.png" y "v8_div01b.png" se puede ver lo que he comentado sobre el funcionamiento incorrecto de la aplicación
+
+---
+
+[v9]
+
+AGREGAR Pantalla "Juego Finalizado":
+- SOLO para el Juego Divide para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Dividendo = divisor * Cociente + Resto
+	- Incorrecto 	: En el mensaje actual mostrar Dividendo = divisor * Cociente + Resto del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Dividendo = divisor * Cociente + Resto de lo que introducido el usuario
+
+---
+
+[v10]
+
+AGREGAR Pantalla "Juego Finalizado":
+- SOLO para Juego Multiplica para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Factor1 x Factor2 = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Factor1 x Factor2 = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Factor1 x Factor2 = Resultado de lo que introdujo el usuario
+- SOLO para Juego Suma para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Numero1 + Numero2 + etc = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Numero1 + Numero2 + etc = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Numero1 + Numero2 + etc = Resultado de lo que introdujo el usuario
+- SOLO para Juego Resta para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Numero1 - Numero2 = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Numero1 - Numero2 = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar v de lo que introdujo el usuario
+- SOLO para Juego Tablas multiplicar para cada operación, si es:
+	- Correcto 		: Mensaje actual y además mostrar Factor1 x Factor2 = Resultado
+	- Incorrecto 	: En el mensaje actual mostrar Factor1 x Factor2 = Resultado del que sería correcto, 
+		y si el usuario ha acabado la operación tb mostrar donde va "(Tu respuesta: XXX)" mostrar Factor1 x Factor2 = Resultado de lo que introdujo el usuario
+
+---
+
+[v11]
+
+MODIFICAR En general en cada juego:
+- Cuando inicia el juego hay que asegurar que el scrol de la parte de las operaciones esta arriba del todo.
+
+MODIFICAR Juego Divide:
+- El resultado de una division no es correcto si solo coincide el Cociente, debe coincidir Dividendo = divisor * Cociente + Resto
+
+MOFICAR Pantalla "Configurar Nuevo Juego":
+- Establecer en "Código" por defecto el último usuario que ha jugado (si aplica).
+
+---
+
+[v12]
+
+AGREGAR Nuevo Juego llamado "Divide 2dg":
+- Funciona todo igual que en el Juego Divide, pero en este caso el divisor tiene 2 digitos
+- En el menú agregar en "Tipo" con icono "÷" y texto "Divide 2dg".
+- El flujo de configuración e historial es el mismo que en Divide (código, avatar, dificultad, puntos).
+- Dificultad:
+	- Fácil: 2 operaciones; Dividendo de 4 dígitos; divisor entre 11 y 29
+	- Media: 3 operaciones; Dividendo de 6 dígitos; divisor entre 21 y 59
+	- Difícil: 4 operaciones; Dividendo de 8 dígitos; divisor entre 31 y 89
+
 --- 
 
 Propuestas a futuro:
 - Mejorar el sistema de Recompensas
 - Incorporar otros Avatar de usuario
-
 
