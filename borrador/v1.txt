@@ -1,5 +1,0 @@
-[v1]
-
-objetivo:
-- crear en carpeta "math001" una aplicacion web que plantee operaciones de suma y resta
-- usa lo descrito en math_ideas-v1.txt
