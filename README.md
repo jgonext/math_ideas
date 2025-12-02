@@ -1,6 +1,6 @@
 # 🎮 Juego de Matemáticas - math001
 
-Aplicación web educativa para niños de 8-10 años que enseña suma y resta a través de una experiencia interactiva y gamificada con avatares kawaii de animales.
+Aplicación web educativa para niños de 8-14 años que enseña suma y resta a través de una experiencia interactiva y gamificada con avatares kawaii de animales.
 
 ![Estado](https://img.shields.io/badge/estado-listo-brightgreen)
 ![Versión](https://img.shields.io/badge/versión-1.0-blue)
