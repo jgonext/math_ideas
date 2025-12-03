@@ -296,6 +296,16 @@ AGREGAR Nuevo Juego llamado "Divide 2dg":
 	- Media: 3 operaciones; Dividendo de 6 dígitos; divisor entre 21 y 59
 	- Difícil: 4 operaciones; Dividendo de 8 dígitos; divisor entre 31 y 89
 
+---
+
+[v13]
+
+MODIFICAR en Menu:
+- Opción "Tipo":
+	- Se prevee agregar bastantes tipos de juego nuevos
+	- Hay que presentarlo de forma un poco más amigable pero cada opción no debe ocupar más de lo que ya ocupa
+	- Una vez que el usuario selecciona un Tipo de juego debe ser visible el seleccionado, ahora no se ve a simple vista
+
 --- 
 
 Propuestas a futuro:
