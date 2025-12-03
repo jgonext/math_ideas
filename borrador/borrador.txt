@@ -354,6 +354,28 @@ MODIFICAR juegos de lógica:
 MODIFICAR en pantalla de Juego:
 - Botón Volver va a la pantalla de "Configurar Nuevo Juego"
 
+---
+
+[v18]
+
+MODIFICAR juegos de lógica -> Sudoku y Cuadrado mágico
+- A cada juego nuevo, el "enunciado" debe cambiar, es decir que 
+	la configuración inicial de numeros (cuadros no editables) debe ser distinta cada vez. 
+
+---
+
+[v19]
+
+MODIFICAR juegos de lógica -> Sudoku lógico
+- En este juego no cuenta la suma de filas y columnas
+- Solo cuenta encajar los numeros sin que se repitan en la misma fila/columna
+- Por ejemplo: para una configuracion de 3x3, habrán numeros del 1 al 3,
+	luego si el 1 esta en el primer cuadrado (dentro de la matriz posición (1,1))
+	entonces el 1 no puede estar en la fila 1 ni en columna 1
+- una vez el usuario pulsa en Finalizar
+	debe aparecer en "Respuesta correcta: " una mini tabla con la solución correcta,
+	y si no es correcta en "Tu respuesta: " otra mini tabla  con lo que puso el usuario
+
 --- 
 
 Propuestas a futuro:
