@@ -318,6 +318,42 @@ AGREGAR en la pantalla "Configurar Nuevo Juego":
 	debajo una breve explicación del juego, y al final el criterio de obtención 
 	de puntos que se puede conseguir en función del nivel de dificultad
 
+---
+
+[v15]
+
+AGREGAR nuevos juegos de lógica:
+- Nuevos juegos:
+	- Sudoku numérico adaptado. Con operaciones en vez de números fijos.
+	- Kakuro. Sumatorias para rellenar cuadrados.
+	- Cuadrado mágico. Completar la tabla para que todas las filas y columnas sumen lo mismo.
+- Para los 3 juegos. Dificultad:
+	- Fácil: 1 elemento; Modo fácil, si correcto 3 puntos
+	- Media: 1 elemento; Modo medio, si correcto 6 puntos
+	- Difícil: 1 elemento; Modo difícil, si correcto 10 puntos
+
+---
+
+[v16]
+
+MODIFICAR juegos de lógica:
+- Kakuro. De momento elimina este juego.
+- Sudoku. Dificultad:
+	- Fácil: 1 elemento; Modo fácil cuadro de 3x3, si correcto 3 puntos
+	- Media: 1 elemento; Modo medio cuadro de 4x4, si correcto 6 puntos
+	- Difícil: 1 elemento; Modo difícil cuadro de 5x5, si correcto 10 puntos
+- Cuadrado mágico. Dificultad:
+	- Fácil: 1 elemento; Modo fácil cuadro de 3x3, si correcto 3 puntos
+	- Media: 1 elemento; Modo medio cuadro de 4x4, si correcto 6 puntos
+	- Difícil: 1 elemento; Modo difícil cuadro de 5x5, si correcto 10 puntos
+
+---
+
+[v17]
+
+MODIFICAR en pantalla de Juego:
+- Botón Volver va a la pantalla de "Configurar Nuevo Juego"
+
 --- 
 
 Propuestas a futuro:

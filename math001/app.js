@@ -60,6 +60,16 @@ const DIFFICULTY_CONFIG = {
         facil: { operations: 2, dividendDigits: 4, divisorDigits: 1 },
         media: { operations: 2, dividendDigits: 5, divisorDigits: 1 },
         dificil: { operations: 2, dividendDigits: 6, divisorDigits: 1 }
+    },
+    sudoku: {
+        facil: { operations: 1 },
+        media: { operations: 1 },
+        dificil: { operations: 1 }
+    },
+    cuadrado_magico: {
+        facil: { operations: 1 },
+        media: { operations: 1 },
+        dificil: { operations: 1 }
     }
 };
 
@@ -93,6 +103,16 @@ const GAME_INFO = {
         title: 'Divide 2dg',
         icon: '÷',
         description: 'Resuelve divisiones con divisor de dos dígitos; introduce el cociente y el resto coherente con la operación.'
+    },
+    sudoku: {
+        title: 'Sudoku lógico',
+        icon: '🧩',
+        description: 'Pequeño sudoku adaptado: rellena cada fila y columna con los números correctos cumpliendo las operaciones sugeridas.'
+    },
+    cuadrado_magico: {
+        title: 'Cuadrado mágico',
+        icon: '🔲',
+        description: 'Rellena la cuadrícula para que todas las filas, columnas y diagonales sumen lo mismo.'
     }
 };
 
@@ -100,6 +120,106 @@ const POINTS_CONFIG = {
     facil: 1,
     media: 2,
     dificil: 5
+};
+
+const LOGIC_POINTS = {
+    facil: 3,
+    media: 6,
+    dificil: 10
+};
+
+const LOGIC_PUZZLES = {
+    sudoku: {
+        facil: {
+            solution: [
+                [1, 2, 3],
+                [2, 3, 1],
+                [3, 1, 2]
+            ],
+            prefilled: [
+                [1, null, null],
+                [null, 3, null],
+                [null, null, 2]
+            ]
+        },
+        media: {
+            solution: [
+                [1, 2, 3, 4],
+                [3, 4, 1, 2],
+                [2, 1, 4, 3],
+                [4, 3, 2, 1]
+            ],
+            prefilled: [
+                [1, null, null, 4],
+                [null, 4, null, null],
+                [null, null, 4, 3],
+                [4, null, null, 1]
+            ]
+        },
+        dificil: {
+            solution: [
+                [1, 2, 3, 4, 5],
+                [2, 3, 4, 5, 1],
+                [3, 4, 5, 1, 2],
+                [4, 5, 1, 2, 3],
+                [5, 1, 2, 3, 4]
+            ],
+            prefilled: [
+                [1, null, null, null, 5],
+                [null, 3, null, 5, null],
+                [null, null, 5, null, 2],
+                [null, 5, null, 2, null],
+                [5, null, null, null, 4]
+            ]
+        }
+    },
+    cuadrado_magico: {
+        facil: {
+            magicSum: 15,
+            solution: [
+                [8, 1, 6],
+                [3, 5, 7],
+                [4, 9, 2]
+            ],
+            prefilled: [
+                [8, null, null],
+                [null, 5, null],
+                [null, null, 2]
+            ]
+        },
+        media: {
+            magicSum: 34,
+            solution: [
+                [16, 2, 3, 13],
+                [5, 11, 10, 8],
+                [9, 7, 6, 12],
+                [4, 14, 15, 1]
+            ],
+            prefilled: [
+                [16, null, null, 13],
+                [null, 11, null, null],
+                [null, null, 6, 12],
+                [4, null, null, 1]
+            ]
+        },
+        dificil: {
+            magicSum: 65,
+            solution: [
+                [17, 24, 1, 8, 15],
+                [23, 5, 7, 14, 16],
+                [4, 6, 13, 20, 22],
+                [10, 12, 19, 21, 3],
+                [11, 18, 25, 2, 9]
+            ],
+            prefilled: [
+                [17, null, null, 8, 15],
+                [null, 5, null, 14, null],
+                [4, null, 13, null, 22],
+                [null, 12, null, 21, null],
+                [11, null, null, 2, 9]
+            ]
+        }
+    }
 };
 
 // Initialize app on load
@@ -212,7 +332,7 @@ function attachEventListeners() {
         // FIX v6: Only ask confirmation once
         if (confirm('¿Estás seguro de que quieres volver? Esta partida no se guardará.')) {
             stopTimer();
-            showScreen('menu');
+            showScreen('setup');
         }
     });
 
@@ -431,17 +551,25 @@ function buildScoringLines(type) {
         { key: 'dificil', label: 'Difícil' }
     ];
 
+    const logicTypes = ['sudoku', 'cuadrado_magico'];
+    const isLogic = logicTypes.includes(type);
+
     return difficultyOrder.map(diff => {
         const cfg = config[diff.key];
         if (!cfg) return null;
-        const basePoints = POINTS_CONFIG[diff.key];
         const operations = cfg.operations || 0;
 
-        if (type === 'multiplicacion') {
-            return `${diff.label}: ${basePoints} XP solo si aciertas todas (${operations} ejercicios).`;
-        }
+        if (isLogic) {
+            const basePoints = LOGIC_POINTS[diff.key];
+            return `${diff.label}: ${basePoints} XP si resuelves el puzzle completo (${operations} elemento).`;
+        } else {
+            const basePoints = POINTS_CONFIG[diff.key];
+            if (type === 'multiplicacion') {
+                return `${diff.label}: ${basePoints} XP solo si aciertas todas (${operations} ejercicios).`;
+            }
 
-        return `${diff.label}: ${basePoints} XP por cada operación correcta (${operations} operaciones).`;
+            return `${diff.label}: ${basePoints} XP por cada operación correcta (${operations} operaciones).`;
+        }
     }).filter(Boolean);
 }
 
@@ -551,6 +679,12 @@ function generateOperations() {
                 intermediateSteps: intermediateSteps,
                 type: 'division_2dg'
             });
+        } else if (gameState.game.type === 'sudoku') {
+            const puzzle = LOGIC_PUZZLES.sudoku[gameState.game.difficulty];
+            gameState.game.operations.push({ type: 'sudoku', puzzle });
+        } else if (gameState.game.type === 'cuadrado_magico') {
+            const puzzle = LOGIC_PUZZLES.cuadrado_magico[gameState.game.difficulty];
+            gameState.game.operations.push({ type: 'cuadrado_magico', puzzle });
         } else {
             // Resta - ensure positive result
             const digits = Math.floor(Math.random() * (config.maxDigits - config.minDigits + 1)) + config.minDigits;
@@ -598,6 +732,8 @@ function renderGameScreen() {
     else if (gameState.game.type === 'multiplica_compleja') typeLabel = 'Multiplica';
     else if (gameState.game.type === 'division') typeLabel = 'Divide';
     else if (gameState.game.type === 'division_2dg') typeLabel = 'Divide 2dg';
+    else if (gameState.game.type === 'sudoku') typeLabel = 'Sudoku lógico';
+    else if (gameState.game.type === 'cuadrado_magico') typeLabel = 'Cuadrado mágico';
     else typeLabel = 'Tablas multiplicar';
 
     const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
@@ -793,6 +929,51 @@ function renderOperation(operation, opIndex) {
 
         html += '</div>'; // End division container columns
 
+    } else if (operation.type === 'sudoku') {
+        const { prefilled, solution } = operation.puzzle;
+        const size = solution.length;
+        const targetSum = (size * (size + 1)) / 2;
+
+        html += '<div class="logic-section">';
+        html += `<div class="logic-title">Suma filas/columnas: ${targetSum}</div>`;
+        html += `<div class="logic-grid" style="grid-template-columns: repeat(${size}, 50px);">`;
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                const value = prefilled[r][c];
+                if (value !== null && value !== undefined) {
+                    html += `<div class="logic-cell prefilled">${value}</div>`;
+                } else {
+                    html += `<div class="logic-cell"><input type="text" class="digit-input logic-input" maxlength="2" data-op-index="${opIndex}" data-type="logic" data-row="${r}" data-col="${c}" pattern="[0-9]+" inputmode="numeric"></div>`;
+                }
+            }
+        }
+        html += '</div>'; // logic-grid
+        html += '<div class="logic-hints">';
+        html += `<div class="logic-row-sums"><span class="logic-sum-pill">Filas objetivo: ${targetSum}</span></div>`;
+        html += `<div class="logic-col-sums"><span class="logic-sum-pill">Columnas objetivo: ${targetSum}</span></div>`;
+        html += '</div>';
+        html += '</div>';
+
+    } else if (operation.type === 'cuadrado_magico') {
+        const { prefilled, magicSum, solution } = operation.puzzle;
+        const size = solution.length;
+
+        html += '<div class="logic-section">';
+        html += `<div class="logic-title">Suma mágica objetivo: ${magicSum}</div>`;
+        html += `<div class="logic-grid" style="grid-template-columns: repeat(${size}, 50px);">`;
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                const value = prefilled[r][c];
+                if (value !== null && value !== undefined) {
+                    html += `<div class="logic-cell prefilled">${value}</div>`;
+                } else {
+                    html += `<div class="logic-cell"><input type="text" class="digit-input logic-input" maxlength="2" data-op-index="${opIndex}" data-type="logic" data-row="${r}" data-col="${c}" pattern="[0-9]+" inputmode="numeric"></div>`;
+                }
+            }
+        }
+        html += '</div>';
+        html += '</div>';
+
     } else {
         // Vertical layout for Suma/Resta
         const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
@@ -874,6 +1055,11 @@ function renderOperation(operation, opIndex) {
                         if (e.target.value.length > 0 && currentIndex < matrixInputs.length - 1) {
                             matrixInputs[currentIndex + 1].focus();
                         }
+                    }
+                } else if (operation.type === 'sudoku' || operation.type === 'cuadrado_magico') {
+                    // Logic games: simple left-to-right navigation
+                    if (e.target.value.length > 0 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
                     }
                 } else {
                     // v4: Suma/Resta uses Right-to-Left navigation (units first)
@@ -1020,6 +1206,76 @@ function finishGame() {
 
             isCorrect = allPartsCorrect;
 
+        } else if (operation.type === 'sudoku') {
+            const { solution, prefilled } = operation.puzzle;
+            let allCorrect = true;
+            const collected = [];
+
+            for (let r = 0; r < solution.length; r++) {
+                const rowVals = [];
+                for (let c = 0; c < solution[0].length; c++) {
+                    const expected = solution[r][c];
+                    const given = prefilled[r][c];
+                    if (given !== null && given !== undefined) {
+                        rowVals.push(given);
+                        continue;
+                    }
+                    const input = document.querySelector(`.digit-input[data-op-index="${opIndex}"][data-row="${r}"][data-col="${c}"]`);
+                    const val = parseInt(input?.value || '0');
+                    rowVals.push(val);
+                    if (val !== expected) {
+                        allCorrect = false;
+                    }
+                }
+                collected.push(rowVals);
+            }
+
+            userAnswer = collected;
+            correctAnswer = solution;
+            isCorrect = allCorrect;
+
+        } else if (operation.type === 'cuadrado_magico') {
+            const { solution, prefilled, magicSum } = operation.puzzle;
+            let allCorrect = true;
+            const collected = [];
+            const size = solution.length;
+
+            for (let r = 0; r < solution.length; r++) {
+                const rowVals = [];
+                for (let c = 0; c < solution[0].length; c++) {
+                    const expected = solution[r][c];
+                    const given = prefilled[r][c];
+                    if (given !== null && given !== undefined) {
+                        rowVals.push(given);
+                        continue;
+                    }
+                    const input = document.querySelector(`.digit-input[data-op-index="${opIndex}"][data-row="${r}"][data-col="${c}"]`);
+                    const val = parseInt(input?.value || '0');
+                    rowVals.push(val);
+                    if (val !== expected) {
+                        allCorrect = false;
+                    }
+                }
+                collected.push(rowVals);
+            }
+
+            // Extra safety: check sums if filled
+            const sumOk = (grid) => {
+                const rowsOk = grid.every(row => row.reduce((a, b) => a + b, 0) === magicSum);
+                const colsOk = [...Array(size).keys()].every(col =>
+                    grid.reduce((acc, row) => acc + row[col], 0) === magicSum
+                );
+                return rowsOk && colsOk;
+            };
+
+            if (!sumOk(collected)) {
+                allCorrect = false;
+            }
+
+            userAnswer = collected;
+            correctAnswer = solution;
+            isCorrect = allCorrect;
+
         } else if (gameState.game.type === 'division' || gameState.game.type === 'division_2dg') {
             // Validate Division (Quotient + Matrix)
             let allPartsCorrect = true;
@@ -1109,6 +1365,8 @@ function finishGame() {
         if (totalCorrect === totalOps) {
             points = POINTS_CONFIG[gameState.game.difficulty];
         }
+    } else if (gameState.game.type === 'sudoku' || gameState.game.type === 'cuadrado_magico') {
+        points = totalCorrect === totalOps ? LOGIC_POINTS[gameState.game.difficulty] : 0;
     } else {
         // Standard scoring for Suma/Resta (per correct answer)
         points = totalCorrect * POINTS_CONFIG[gameState.game.difficulty];
@@ -1162,6 +1420,19 @@ function showResults(results, totalCorrect, totalOps, points) {
                 const userQuotient = parseInt(result.userAnswer) || 0;
                 const userRemainder = dividend - (divisor * userQuotient);
                 userFormula = `${dividend} = ${divisor} * ${userQuotient} + ${userRemainder}`;
+            }
+
+        } else if (gameState.game.type === 'sudoku') {
+            correctFormula = 'Puzzle resuelto (todas las sumas coinciden).';
+            if (!result.isCorrect) {
+                userFormula = 'Algunas casillas no coinciden con la solución.';
+            }
+
+        } else if (gameState.game.type === 'cuadrado_magico') {
+            const magicSum = result.operation.puzzle.magicSum;
+            correctFormula = `Todas las filas/columnas/diagonales suman ${magicSum}.`;
+            if (!result.isCorrect) {
+                userFormula = `Tu cuadrado no alcanza la suma mágica de ${magicSum}.`;
             }
 
         } else if (gameState.game.type === 'suma') {
@@ -1233,7 +1504,9 @@ function saveToHistory(totalCorrect, totalOps, points) {
             gameState.game.type === 'resta' ? 'Resta' :
                 gameState.game.type === 'multiplica_compleja' ? 'Multiplica' :
                     gameState.game.type === 'division' ? 'Divide' :
-                        gameState.game.type === 'division_2dg' ? 'Divide 2dg' : 'Tablas',
+                        gameState.game.type === 'division_2dg' ? 'Divide 2dg' :
+                            gameState.game.type === 'sudoku' ? 'Sudoku lógico' :
+                                gameState.game.type === 'cuadrado_magico' ? 'Cuadrado mágico' : 'Tablas',
         difficulty: gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1),
         score: totalCorrect,
         total: totalOps,
