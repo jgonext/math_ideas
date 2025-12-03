@@ -186,38 +186,6 @@ const BASE_LOGIC_PUZZLES = {
                 [null, 5, null],
                 [null, null, 2]
             ]
-        },
-        media: {
-            magicSum: 34,
-            solution: [
-                [16, 2, 3, 13],
-                [5, 11, 10, 8],
-                [9, 7, 6, 12],
-                [4, 14, 15, 1]
-            ],
-            prefilled: [
-                [16, null, null, 13],
-                [null, 11, null, null],
-                [null, null, 6, 12],
-                [4, null, null, 1]
-            ]
-        },
-        dificil: {
-            magicSum: 65,
-            solution: [
-                [17, 24, 1, 8, 15],
-                [23, 5, 7, 14, 16],
-                [4, 6, 13, 20, 22],
-                [10, 12, 19, 21, 3],
-                [11, 18, 25, 2, 9]
-            ],
-            prefilled: [
-                [17, null, null, 8, 15],
-                [null, 5, null, 14, null],
-                [4, null, 13, null, 22],
-                [null, 12, null, 21, null],
-                [11, null, null, 2, 9]
-            ]
         }
     }
 };
@@ -522,19 +490,106 @@ function generateSudokuPuzzle(difficulty) {
 }
 
 function generateMagicSquarePuzzle(difficulty) {
-    const base = BASE_LOGIC_PUZZLES.cuadrado_magico[difficulty];
-    const size = base.solution.length;
-    const rowPerm = randomPermutation(size);
-    const colPerm = randomPermutation(size);
+    if (difficulty === 'facil') {
+        const base = BASE_LOGIC_PUZZLES.cuadrado_magico.facil;
+        const size = base.solution.length;
+        const validOffsets = [-1, 0];
 
-    const permSolution = permuteGrid(base.solution, rowPerm, colPerm);
-    const permPrefilled = permuteGrid(base.prefilled, rowPerm, colPerm);
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const perm = randomPermutation(size);
+            const permSolution = permuteGrid(base.solution, perm, perm);
+            const permPrefilled = permuteGrid(base.prefilled, perm, perm);
 
-    return {
-        magicSum: base.magicSum,
-        solution: permSolution,
-        prefilled: permPrefilled
-    };
+            let offset = validOffsets[Math.floor(Math.random() * validOffsets.length)];
+            const minVal = Math.min(...permSolution.flat()) + offset;
+            const maxVal = Math.max(...permSolution.flat()) + offset;
+            if (minVal < 0 || maxVal > 9) offset = 0;
+
+            const shiftedSolution = permSolution.map(row => row.map(val => val + offset));
+            const shiftedPrefilled = permPrefilled.map(row => row.map(val => val === null ? null : val + offset));
+            const shiftedMagicSum = base.magicSum + size * offset;
+
+            if (isMagicGrid(shiftedSolution, shiftedMagicSum)) {
+                const finalSum = computeMagicSum(shiftedSolution);
+                return {
+                    magicSum: finalSum,
+                    solution: shiftedSolution,
+                    prefilled: shiftedPrefilled
+                };
+            }
+        }
+
+        // Fallback seguro
+        const finalSum = computeMagicSum(base.solution);
+        return {
+            magicSum: base.magicSum,
+            solution: base.solution,
+            prefilled: base.prefilled
+        };
+    }
+
+    if (difficulty === 'media') {
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const offset = randomInRange(0, 6); // mantiene valores 0..9
+            const digits = [0, 1, 2, 3].map(d => d + offset);
+            const [a, b, c, d] = digits;
+            const solution = [
+                [a, b, c, d],
+                [d, c, b, a],
+                [b, a, d, c],
+                [c, d, a, b]
+            ];
+            const magicSum = a + b + c + d;
+            if (!isMagicGrid(solution, magicSum)) continue;
+
+            const prefilled = solution.map((row, r) =>
+                row.map((val, cIdx) => ((r + cIdx) % 2 === 0 ? val : null))
+            );
+            const finalSum = computeMagicSum(solution);
+            return { magicSum: finalSum, solution, prefilled };
+        }
+
+        // Fallback
+        const digits = [0, 1, 2, 3];
+        const [a, b, c, d] = digits;
+        const solution = [
+            [a, b, c, d],
+            [d, c, b, a],
+            [b, a, d, c],
+            [c, d, a, b]
+        ];
+        const magicSum = a + b + c + d;
+        const prefilled = solution.map((row, r) =>
+            row.map((val, cIdx) => ((r + cIdx) % 2 === 0 ? val : null))
+        );
+        const finalSum = computeMagicSum(solution);
+        return { magicSum: finalSum, solution, prefilled };
+    }
+
+    // difícil: 5x5 con valores 0..9 y diagonales correctas
+    for (let attempt = 0; attempt < 10; attempt++) {
+        const baseVal = randomInRange(0, 9);
+        const size = 5;
+        const solution = Array.from({ length: size }, () => Array(size).fill(baseVal));
+        const magicSum = baseVal * size;
+        if (!isMagicGrid(solution, magicSum)) continue;
+
+        const prefilled = solution.map((row, r) =>
+            row.map((val, cIdx) => (r === cIdx || r + cIdx === size - 1 ? val : null))
+        );
+        const finalSum = computeMagicSum(solution);
+        return { magicSum: finalSum, solution, prefilled };
+    }
+
+    // Fallback 5x5 en caso improbable
+    const size = 5;
+    const solution = Array.from({ length: size }, () => Array(size).fill(0));
+    const magicSum = 0;
+    const prefilled = solution.map((row, r) =>
+        row.map((val, cIdx) => (r === cIdx || r + cIdx === size - 1 ? val : null))
+    );
+    const finalSum = computeMagicSum(solution);
+    return { magicSum: finalSum, solution, prefilled };
 }
 
 // Update visible selected game type
@@ -630,6 +685,18 @@ function buildScoringLines(type) {
 // Random integer in [min, max]
 function randomInRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Check if a grid matches magic sum in rows, columns and diagonals
+function isMagicGrid(grid, target) {
+    const size = grid.length;
+    const rowsOk = grid.every(row => row.reduce((a, b) => a + b, 0) === target);
+    const colsOk = [...Array(size).keys()].every(col =>
+        grid.reduce((acc, row) => acc + row[col], 0) === target
+    );
+    const diag1 = grid.reduce((acc, row, idx) => acc + row[idx], 0);
+    const diag2 = grid.reduce((acc, row, idx) => acc + row[size - 1 - idx], 0);
+    return rowsOk && colsOk && diag1 === target && diag2 === target;
 }
 
 // Generate Operations Based on Difficulty
@@ -814,6 +881,14 @@ function renderGameScreen() {
             </div>
         `;
         operationContainer.appendChild(opDiv);
+    });
+
+    // Attach "Solucionar" buttons for cuadrado mágico
+    document.querySelectorAll('[data-action="solve-magic"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const opIndex = parseInt(btn.dataset.opIndex, 10);
+            solveMagicSquare(opIndex, btn);
+        });
     });
 }
 
@@ -1003,16 +1078,19 @@ function renderOperation(operation, opIndex) {
         html += '</div>'; // logic-grid
         html += '</div>';
 
-        } else if (operation.type === 'cuadrado_magico') {
-            const { prefilled, magicSum, solution } = operation.puzzle;
-            const size = solution.length;
+    } else if (operation.type === 'cuadrado_magico') {
+        const { prefilled, magicSum, solution } = operation.puzzle;
+        const size = solution.length;
 
-            html += '<div class="logic-section">';
-            html += `<div class="logic-title">Suma mágica objetivo: ${magicSum}</div>`;
-            html += `<div class="logic-grid" style="grid-template-columns: repeat(${size}, 50px);">`;
-            for (let r = 0; r < size; r++) {
-                for (let c = 0; c < size; c++) {
-                    const value = prefilled[r][c];
+        html += '<div class="logic-section">';
+        html += `<div class="logic-header">
+            <div class="logic-title">Suma mágica objetivo: ${magicSum}</div>
+            <button class="btn-solve" type="button" data-action="solve-magic" data-op-index="${opIndex}">Solucionar</button>
+        </div>`;
+        html += `<div class="logic-grid" style="grid-template-columns: repeat(${size}, 50px);">`;
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                const value = prefilled[r][c];
                 if (value !== null && value !== undefined) {
                     html += `<div class="logic-cell prefilled">${value}</div>`;
                 } else {
@@ -1329,7 +1407,10 @@ function finishGame() {
                 const colsOk = [...Array(size).keys()].every(col =>
                     grid.reduce((acc, row) => acc + row[col], 0) === magicSum
                 );
-                return rowsOk && colsOk;
+                const diag1 = grid.reduce((acc, row, idx) => acc + row[idx], 0);
+                const diag2 = grid.reduce((acc, row, idx) => acc + row[size - 1 - idx], 0);
+                const diagsOk = diag1 === magicSum && diag2 === magicSum;
+                return rowsOk && colsOk && diagsOk;
             };
 
             if (!sumOk(collected)) {
@@ -1494,9 +1575,9 @@ function showResults(results, totalCorrect, totalOps, points) {
 
         } else if (gameState.game.type === 'cuadrado_magico') {
             const magicSum = result.operation.puzzle.magicSum;
-            correctFormula = `Todas las filas/columnas/diagonales suman ${magicSum}.`;
+            correctFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.correctAnswer)}`;
             if (!result.isCorrect) {
-                userFormula = `Tu cuadrado no alcanza la suma mágica de ${magicSum}.`;
+                userFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.userAnswer)}`;
             }
 
         } else if (gameState.game.type === 'suma') {
@@ -1525,11 +1606,11 @@ function showResults(results, totalCorrect, totalOps, points) {
         }
 
         if (result.isCorrect) {
-            feedbackText = gameState.game.type === 'sudoku'
+            feedbackText = (gameState.game.type === 'sudoku' || gameState.game.type === 'cuadrado_magico')
                 ? `¡Correcto! Respuesta correcta: ${correctFormula}`
                 : `¡Correcto! ${correctFormula}`;
         } else {
-            feedbackText = gameState.game.type === 'sudoku'
+            feedbackText = (gameState.game.type === 'sudoku' || gameState.game.type === 'cuadrado_magico')
                 ? `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula || 'Sin completar'})`
                 : `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula})`;
         }
@@ -1559,6 +1640,38 @@ function renderMiniGrid(grid) {
     });
     html += '</div>';
     return html;
+}
+
+// Helper: fill a magic square with the correct solution and disable finish
+function solveMagicSquare(opIndex, buttonEl) {
+    const operation = gameState.game.operations[opIndex];
+    if (!operation || operation.type !== 'cuadrado_magico') return;
+
+    const { solution } = operation.puzzle;
+    const size = solution.length;
+
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            const input = document.querySelector(`.digit-input[data-op-index="${opIndex}"][data-row="${r}"][data-col="${c}"]`);
+            if (input) {
+                input.value = solution[r][c];
+                input.disabled = true;
+            }
+        }
+    }
+
+    const finishBtn = document.getElementById('btn-finish');
+    if (finishBtn) finishBtn.disabled = true;
+    if (buttonEl) buttonEl.disabled = true;
+
+    // Detener el cronómetro al solucionar automáticamente
+    stopTimer();
+}
+
+// Compute magic sum from first row (assuming valid grid)
+function computeMagicSum(grid) {
+    if (!grid || grid.length === 0) return 0;
+    return grid[0].reduce((a, b) => a + b, 0);
 }
 
 // Save to History

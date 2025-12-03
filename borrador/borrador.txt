@@ -376,6 +376,22 @@ MODIFICAR juegos de lógica -> Sudoku lógico
 	debe aparecer en "Respuesta correcta: " una mini tabla con la solución correcta,
 	y si no es correcta en "Tu respuesta: " otra mini tabla  con lo que puso el usuario
 
+
+---
+
+[v20]
+
+MODIFICAR juegos de lógica -> Cuadrado mágico
+- una vez el usuario pulsa en Finalizar
+	debe mostrarse el objetivo
+	debe aparecer en "Respuesta correcta: " una mini tabla con la solución correcta,
+	y si no es correcta en "Tu respuesta: " otra mini tabla  con lo que puso el usuario
+- el objetivo y los numeros de enunciado deben ir cambiando, pero los numeros de cada
+	cuadrado van del 0 al 9
+- Agrega un boton Solucionar a la derecha del enunciado que rellene con la solución 
+	el cuadrado mágico. Al pulsarlo además se desactiva el botón de Finalizar,
+	y separa el cronometro
+
 --- 
 
 Propuestas a futuro:
