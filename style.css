@@ -454,6 +454,37 @@ body {
     color: var(--primary-color);
 }
 
+.logic-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.btn-solve {
+    padding: 6px 12px;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    background: white;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.btn-solve:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-solve:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Avatar Selection */
 .avatar-grid {
     display: grid;
