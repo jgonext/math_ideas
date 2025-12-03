@@ -380,6 +380,80 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+.logic-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.logic-grid {
+    display: grid;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+
+.logic-cell {
+    width: 50px;
+    height: 50px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.logic-cell.prefilled {
+    background: #eef2ff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.logic-input {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: transparent;
+    outline: none;
+}
+
+.logic-hints {
+    display: grid;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.logic-row-sums,
+.logic-col-sums {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.logic-sum-pill {
+    background: var(--bg-primary);
+    border: 1px dashed var(--border-color);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.logic-title {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
 /* Avatar Selection */
 .avatar-grid {
     display: grid;
