@@ -1054,6 +1054,18 @@ body {
     background: white;
 }
 
+.mini-cell.given {
+    background: #e6ecff;
+    border-color: #b3c4ff;
+    color: #1f3ea3;
+}
+
+.mini-cell.wrong {
+    background: #ffe6e6;
+    border-color: #ff9b9b;
+    color: #b30000;
+}
+
 .modal-overlay {
     position: fixed;
     inset: 0;

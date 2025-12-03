@@ -431,6 +431,9 @@ function loadRecentUsers() {
 
 // Start Game
 function startGame() {
+    const finishBtn = document.getElementById('btn-finish');
+    if (finishBtn) finishBtn.disabled = false; // reset in case a previous "Solucionar" lo dejó desactivado
+
     generateOperations();
     renderGameScreen();
     startTimer();
@@ -566,30 +569,39 @@ function generateMagicSquarePuzzle(difficulty) {
         return { magicSum: finalSum, solution, prefilled };
     }
 
-    // difícil: 5x5 con valores 0..9 y diagonales correctas
+    // difícil: 5x5 con valores 0..9 y diagonales correctas (circulante, no uniforme)
     for (let attempt = 0; attempt < 10; attempt++) {
-        const baseVal = randomInRange(0, 9);
+        const baseDigits = [0, 1, 2, 3, 4];
+        const offset = randomInRange(0, 5); // mantiene valores en 0..9
+        const digits = baseDigits.map(d => d + offset);
         const size = 5;
-        const solution = Array.from({ length: size }, () => Array(size).fill(baseVal));
-        const magicSum = baseVal * size;
+
+        // Matriz circulante que mantiene sumas iguales en filas/columnas/diagonales
+        const solution = Array.from({ length: size }, (_, r) =>
+            Array.from({ length: size }, (_, c) => digits[(c + r * 2) % size])
+        );
+
+        const magicSum = computeMagicSum(solution);
         if (!isMagicGrid(solution, magicSum)) continue;
+        const distinct = new Set(solution.flat());
+        if (distinct.size < 2) continue; // evita tablero uniforme
 
         const prefilled = solution.map((row, r) =>
             row.map((val, cIdx) => (r === cIdx || r + cIdx === size - 1 ? val : null))
         );
-        const finalSum = computeMagicSum(solution);
-        return { magicSum: finalSum, solution, prefilled };
+        return { magicSum, solution, prefilled };
     }
 
-    // Fallback 5x5 en caso improbable
-    const size = 5;
-    const solution = Array.from({ length: size }, () => Array(size).fill(0));
-    const magicSum = 0;
-    const prefilled = solution.map((row, r) =>
-        row.map((val, cIdx) => (r === cIdx || r + cIdx === size - 1 ? val : null))
+    // Fallback 5x5 en caso improbable (patrón circulante fijo 0..4)
+    const fallbackDigits = [0, 1, 2, 3, 4];
+    const fallbackSolution = Array.from({ length: 5 }, (_, r) =>
+        Array.from({ length: 5 }, (_, c) => fallbackDigits[(c + r * 2) % 5])
     );
-    const finalSum = computeMagicSum(solution);
-    return { magicSum: finalSum, solution, prefilled };
+    const fallbackSum = computeMagicSum(fallbackSolution);
+    const fallbackPrefilled = fallbackSolution.map((row, r) =>
+        row.map((val, cIdx) => (r === cIdx || r + cIdx === 5 - 1 ? val : null))
+    );
+    return { magicSum: fallbackSum, solution: fallbackSolution, prefilled: fallbackPrefilled };
 }
 
 // Update visible selected game type
@@ -1568,16 +1580,18 @@ function showResults(results, totalCorrect, totalOps, points) {
             }
 
         } else if (gameState.game.type === 'sudoku') {
-            correctFormula = renderMiniGrid(result.correctAnswer);
+            const prefilled = result.operation.puzzle.prefilled;
+            correctFormula = renderMiniGrid(result.correctAnswer, prefilled);
             if (!result.isCorrect) {
-                userFormula = renderMiniGrid(result.userAnswer);
+                userFormula = renderMiniGrid(result.userAnswer, prefilled, result.correctAnswer);
             }
 
         } else if (gameState.game.type === 'cuadrado_magico') {
             const magicSum = result.operation.puzzle.magicSum;
-            correctFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.correctAnswer)}`;
+            const prefilled = result.operation.puzzle.prefilled;
+            correctFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.correctAnswer, prefilled)}`;
             if (!result.isCorrect) {
-                userFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.userAnswer)}`;
+                userFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.userAnswer, prefilled, result.correctAnswer)}`;
             }
 
         } else if (gameState.game.type === 'suma') {
@@ -1629,13 +1643,18 @@ function showResults(results, totalCorrect, totalOps, points) {
 }
 
 // Helper: render a small grid for logic results
-function renderMiniGrid(grid) {
+function renderMiniGrid(grid, prefilled, reference) {
     if (!grid || grid.length === 0) return '';
     const cols = grid[0].length || 0;
     let html = `<div class="mini-grid" style="grid-template-columns: repeat(${cols}, 24px);">`;
-    grid.forEach(row => {
-        row.forEach(cell => {
-            html += `<div class="mini-cell">${cell ?? ''}</div>`;
+    grid.forEach((row, rIdx) => {
+        row.forEach((cell, cIdx) => {
+            const given = prefilled && prefilled[rIdx] && prefilled[rIdx][cIdx] !== null && prefilled[rIdx][cIdx] !== undefined;
+            const givenClass = given ? ' given' : '';
+            const hasValue = cell !== null && cell !== undefined;
+            const isWrong = reference && reference[rIdx] && reference[rIdx][cIdx] !== undefined && hasValue && cell !== reference[rIdx][cIdx];
+            const wrongClass = isWrong ? ' wrong' : '';
+            html += `<div class="mini-cell${givenClass}${wrongClass}">${cell ?? ''}</div>`;
         });
     });
     html += '</div>';
