@@ -376,7 +376,6 @@ MODIFICAR juegos de lógica -> Sudoku lógico
 	debe aparecer en "Respuesta correcta: " una mini tabla con la solución correcta,
 	y si no es correcta en "Tu respuesta: " otra mini tabla  con lo que puso el usuario
 
-
 ---
 
 [v20]
@@ -391,8 +390,24 @@ MODIFICAR juegos de lógica -> Cuadrado mágico
 - Agrega un boton Solucionar a la derecha del enunciado que rellene con la solución 
 	el cuadrado mágico. Al pulsarlo además se desactiva el botón de Finalizar,
 	y separa el cronometro
+- no se permite que todos los numeros del enunciado sean el mismo
 
---- 
+---
+
+[v21]
+
+MODIFICAR pantalla "Juego Finalizado" -> Sudoku logico y Cuadrado magico
+- En las tablas los numeros que forman parte del enunciado inicial deben tener fondo azul
+
+MODIFICAR pantalla "Juego Finalizado" -> SOLO caso Sudoku logico
+- Cuando no es correcto, en las tablas con numeros introducidos por usuario además se debe resaltar
+	en rojo los numeros en que el usuario se ha equivocado
+
+MODIFICAR pantalla "Juego Finalizado" -> SOLO caso Cuadrado magico
+- Cuando no es correcto, en las tablas con numeros introducidos por usuario además se debe resaltar
+	en rojo los numeros en que el usuario se ha equivocado
+
+---
 
 Propuestas a futuro:
 - Mejorar el sistema de Recompensas
