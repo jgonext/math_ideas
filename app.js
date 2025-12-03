@@ -159,6 +159,7 @@ function attachEventListeners() {
             document.querySelectorAll('[data-game-type]').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
             gameState.game.type = e.currentTarget.dataset.gameType;
+            updateSelectedTypeDisplay(e.currentTarget);
             validateSetup();
         });
     });
@@ -206,6 +207,7 @@ function resetGameSetup() {
     document.querySelectorAll('[data-game-type]').forEach(btn => btn.classList.remove('selected'));
     document.querySelectorAll('[data-difficulty]').forEach(btn => btn.classList.remove('selected'));
     document.getElementById('btn-start-game').disabled = true;
+    updateSelectedTypeDisplay(null);
 
     // Load recent users
     loadRecentUsers();
@@ -316,6 +318,22 @@ function randomNumber(digits) {
     const min = Math.pow(10, digits - 1);
     const max = Math.pow(10, digits) - 1;
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Update visible selected game type
+function updateSelectedTypeDisplay(selectedBtn) {
+    const display = document.getElementById('selected-type-display');
+    if (!display) return;
+
+    if (!selectedBtn) {
+        display.textContent = 'Selecciona un tipo de juego';
+        display.classList.remove('active');
+        return;
+    }
+
+    const label = selectedBtn.querySelector('.option-label')?.textContent?.trim() || selectedBtn.textContent.trim();
+    display.textContent = `Tipo seleccionado: ${label}`;
+    display.classList.add('active');
 }
 
 // Random integer in [min, max]
