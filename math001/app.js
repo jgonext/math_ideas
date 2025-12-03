@@ -48,8 +48,8 @@ const DIFFICULTY_CONFIG = {
     },
     multiplica_compleja: {
         facil: { operations: 2, factor1Digits: { min: 2, max: 4 }, factor2Digits: 1 },
-        media: { operations: 4, factor1Digits: 6, factor2Digits: 2 },
-        dificil: { operations: 6, factor1Digits: 8, factor2Digits: 3 }
+        media: { operations: 2, factor1Digits: 6, factor2Digits: 2 },
+        dificil: { operations: 2, factor1Digits: 8, factor2Digits: 3 }
     },
     division_2dg: {
         facil: { operations: 2, dividendDigits: 4, divisorMin: 11, divisorMax: 29 },
@@ -59,7 +59,7 @@ const DIFFICULTY_CONFIG = {
     division: {
         facil: { operations: 2, dividendDigits: 4, divisorDigits: 1 },
         media: { operations: 2, dividendDigits: 5, divisorDigits: 1 },
-        dificil: { operations: 2, dividendDigits: 6, divisorDigits: 1 }
+        dificil: { operations: 2, dividendDigits: 6, divisorDigits: 2 }
     },
     sudoku: {
         facil: { operations: 1 },
@@ -126,6 +126,12 @@ const LOGIC_POINTS = {
     facil: 3,
     media: 6,
     dificil: 10
+};
+
+const MULT_DIV_POINTS = {
+    facil: 4,
+    media: 8,
+    dificil: 12
 };
 
 const BASE_LOGIC_PUZZLES = {
@@ -674,6 +680,8 @@ function buildScoringLines(type) {
 
     const logicTypes = ['sudoku', 'cuadrado_magico'];
     const isLogic = logicTypes.includes(type);
+    const heavyTypes = ['multiplica_compleja', 'division', 'division_2dg'];
+    const isHeavy = heavyTypes.includes(type);
 
     return difficultyOrder.map(diff => {
         const cfg = config[diff.key];
@@ -683,6 +691,9 @@ function buildScoringLines(type) {
         if (isLogic) {
             const basePoints = LOGIC_POINTS[diff.key];
             return `${diff.label}: ${basePoints} XP si resuelves el puzzle completo (${operations} elemento).`;
+        } else if (isHeavy) {
+            const basePoints = MULT_DIV_POINTS[diff.key];
+            return `${diff.label}: ${basePoints} XP por cada operación correcta (${operations} operaciones).`;
         } else {
             const basePoints = POINTS_CONFIG[diff.key];
             if (type === 'multiplicacion') {
@@ -750,7 +761,9 @@ function generateOperations() {
         } else if (gameState.game.type === 'division') {
             // Division: Dividend / Divisor
             const dividendDigits = config.dividendDigits;
-            const divisor = Math.floor(Math.random() * 8) + 2; // 2-9
+            const divisor = config.divisorDigits === 1
+                ? Math.floor(Math.random() * 8) + 2 // 2-9
+                : randomInRange(Math.pow(10, config.divisorDigits - 1), Math.pow(10, config.divisorDigits) - 1);
             const dividend = randomNumber(dividendDigits);
 
             const quotient = Math.floor(dividend / divisor);
@@ -900,6 +913,14 @@ function renderGameScreen() {
         btn.addEventListener('click', () => {
             const opIndex = parseInt(btn.dataset.opIndex, 10);
             solveMagicSquare(opIndex, btn);
+        });
+    });
+
+    // Attach "Solucionar" buttons for sudoku
+    document.querySelectorAll('[data-action="solve-sudoku"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const opIndex = parseInt(btn.dataset.opIndex, 10);
+            solveSudoku(opIndex, btn);
         });
     });
 }
@@ -1075,7 +1096,10 @@ function renderOperation(operation, opIndex) {
         const size = solution.length;
 
         html += '<div class="logic-section">';
-        html += '<div class="logic-title">Rellena sin repetir números en fila ni columna</div>';
+        html += `<div class="logic-header">
+            <div class="logic-title">Rellena sin repetir números en fila ni columna</div>
+            <button class="btn-solve" type="button" data-action="solve-sudoku" data-op-index="${opIndex}">Solucionar</button>
+        </div>`;
         html += `<div class="logic-grid" style="grid-template-columns: repeat(${size}, 50px);">`;
         for (let r = 0; r < size; r++) {
             for (let c = 0; c < size; c++) {
@@ -1517,6 +1541,8 @@ function finishGame() {
     const totalOps = gameState.game.operations.length;
     let points = 0;
 
+    const specialMultiplyDivide = ['multiplica_compleja', 'division', 'division_2dg'];
+
     if (gameState.game.type === 'multiplicacion') {
         // v3: All or Nothing scoring for multiplication
         if (totalCorrect === totalOps) {
@@ -1524,6 +1550,8 @@ function finishGame() {
         }
     } else if (gameState.game.type === 'sudoku' || gameState.game.type === 'cuadrado_magico') {
         points = totalCorrect === totalOps ? LOGIC_POINTS[gameState.game.difficulty] : 0;
+    } else if (specialMultiplyDivide.includes(gameState.game.type)) {
+        points = totalCorrect * MULT_DIV_POINTS[gameState.game.difficulty];
     } else {
         // Standard scoring for Suma/Resta (per correct answer)
         points = totalCorrect * POINTS_CONFIG[gameState.game.difficulty];
@@ -1691,6 +1719,30 @@ function solveMagicSquare(opIndex, buttonEl) {
 function computeMagicSum(grid) {
     if (!grid || grid.length === 0) return 0;
     return grid[0].reduce((a, b) => a + b, 0);
+}
+
+// Helper: solve sudoku, fill solution, disable inputs and finish button, stop timer
+function solveSudoku(opIndex, buttonEl) {
+    const operation = gameState.game.operations[opIndex];
+    if (!operation || operation.type !== 'sudoku') return;
+
+    const { solution } = operation.puzzle;
+    const size = solution.length;
+
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            const input = document.querySelector(`.digit-input[data-op-index="${opIndex}"][data-row="${r}"][data-col="${c}"]`);
+            if (input) {
+                input.value = solution[r][c];
+                input.disabled = true;
+            }
+        }
+    }
+
+    const finishBtn = document.getElementById('btn-finish');
+    if (finishBtn) finishBtn.disabled = true;
+    if (buttonEl) buttonEl.disabled = true;
+    stopTimer();
 }
 
 // Save to History

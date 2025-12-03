@@ -389,7 +389,7 @@ MODIFICAR juegos de lógica -> Cuadrado mágico
 	cuadrado van del 0 al 9
 - Agrega un boton Solucionar a la derecha del enunciado que rellene con la solución 
 	el cuadrado mágico. Al pulsarlo además se desactiva el botón de Finalizar,
-	y separa el cronometro
+	y se para el cronometro
 - no se permite que todos los numeros del enunciado sean el mismo
 
 ---
@@ -406,6 +406,33 @@ MODIFICAR pantalla "Juego Finalizado" -> SOLO caso Sudoku logico
 MODIFICAR pantalla "Juego Finalizado" -> SOLO caso Cuadrado magico
 - Cuando no es correcto, en las tablas con numeros introducidos por usuario además se debe resaltar
 	en rojo los numeros en que el usuario se ha equivocado
+
+---
+
+[v22]
+
+MODIFICAR juego Divide:
+- En el modo dificil: 2 operaciones; cada operación -> Dividendo es numero de 6 digitos, divisor numero de 2 digitos
+
+MODIFICAR pantalla "Configurar Nuevo Juego":
+- Ocultar, que no borrar, el botón de Tipo "Divide 2dg"
+
+---
+
+[v23]
+
+MODIFICAR puntos para juegos -> Multiplica y Divide
+- Fácil: 4 puntos por operacion
+- Medio: 8 puntos por operacion
+- Difícil: 12 puntos por operacion
+
+MODIFICAR juego Multiplica
+- Siempre 2 operaciones para cualquier modo Fácil|Medio|Difícil
+
+MODIFICAR juegos de lógica -> Sudoku logico
+- Agrega un boton Solucionar a la derecha del enunciado que rellene con la solución 
+	el sudoku. Al pulsarlo además se desactiva el botón de Finalizar,
+	y se para el cronometro
 
 ---
 
