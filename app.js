@@ -63,6 +63,39 @@ const DIFFICULTY_CONFIG = {
     }
 };
 
+const GAME_INFO = {
+    suma: {
+        title: 'Suma',
+        icon: '➕',
+        description: 'Resuelve varias sumas en vertical, alineando cada columna y rellenando el resultado final.'
+    },
+    resta: {
+        title: 'Resta',
+        icon: '➖',
+        description: 'Calcula restas en vertical asegurando que cada cifra está alineada para obtener el resultado correcto.'
+    },
+    multiplicacion: {
+        title: 'Tablas multiplicar',
+        icon: '🔢',
+        description: 'Completa productos de un dígito por un dígito (tablas del 2 al 9) rellenando cada resultado.'
+    },
+    multiplica_compleja: {
+        title: 'Multiplica',
+        icon: '✖️',
+        description: 'Resuelve multiplicaciones de varios dígitos rellenando cada parcial y el resultado total alineado a la derecha.'
+    },
+    division: {
+        title: 'Divide',
+        icon: '÷',
+        description: 'Realiza divisiones de un divisor de un dígito, introduciendo cociente y resto cumpliendo la igualdad.'
+    },
+    division_2dg: {
+        title: 'Divide 2dg',
+        icon: '÷',
+        description: 'Resuelve divisiones con divisor de dos dígitos; introduce el cociente y el resto coherente con la operación.'
+    }
+};
+
 const POINTS_CONFIG = {
     facil: 1,
     media: 2,
@@ -195,6 +228,16 @@ function attachEventListeners() {
 
     // Leaderboard screen
     document.getElementById('btn-back-leaderboard').addEventListener('click', () => showScreen('menu'));
+
+    // Type info modal
+    document.getElementById('btn-type-info').addEventListener('click', openTypeInfoModal);
+    document.getElementById('type-info-close').addEventListener('click', closeTypeInfoModal);
+    document.getElementById('type-info-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'type-info-modal') closeTypeInfoModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeTypeInfoModal();
+    });
 }
 
 // Reset Game Setup
@@ -323,17 +366,83 @@ function randomNumber(digits) {
 // Update visible selected game type
 function updateSelectedTypeDisplay(selectedBtn) {
     const display = document.getElementById('selected-type-display');
+    const infoBtn = document.getElementById('btn-type-info');
     if (!display) return;
 
     if (!selectedBtn) {
         display.textContent = 'Selecciona un tipo de juego';
         display.classList.remove('active');
+        if (infoBtn) {
+            infoBtn.disabled = true;
+            infoBtn.dataset.type = '';
+        }
         return;
     }
 
     const label = selectedBtn.querySelector('.option-label')?.textContent?.trim() || selectedBtn.textContent.trim();
     display.textContent = `Tipo seleccionado: ${label}`;
     display.classList.add('active');
+    if (infoBtn) {
+        infoBtn.disabled = false;
+        infoBtn.dataset.type = selectedBtn.dataset.gameType;
+    }
+}
+
+// Modal: mostrar info del tipo de juego
+function openTypeInfoModal() {
+    const modal = document.getElementById('type-info-modal');
+    if (!modal) return;
+
+    const type = gameState.game.type;
+    if (!type) return;
+
+    const info = GAME_INFO[type] || {};
+    document.getElementById('type-info-icon').textContent = info.icon || 'ℹ️';
+    document.getElementById('type-info-title').textContent = info.title || 'Tipo de juego';
+    document.getElementById('type-info-description').textContent =
+        info.description || 'Practica y gana puntos completando el juego.';
+
+    const pointsList = document.getElementById('type-info-points');
+    pointsList.innerHTML = '';
+    buildScoringLines(type).forEach(line => {
+        const li = document.createElement('li');
+        li.textContent = line;
+        pointsList.appendChild(li);
+    });
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeTypeInfoModal() {
+    const modal = document.getElementById('type-info-modal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function buildScoringLines(type) {
+    const config = DIFFICULTY_CONFIG[type];
+    if (!config) return [];
+
+    const difficultyOrder = [
+        { key: 'facil', label: 'Fácil' },
+        { key: 'media', label: 'Media' },
+        { key: 'dificil', label: 'Difícil' }
+    ];
+
+    return difficultyOrder.map(diff => {
+        const cfg = config[diff.key];
+        if (!cfg) return null;
+        const basePoints = POINTS_CONFIG[diff.key];
+        const operations = cfg.operations || 0;
+
+        if (type === 'multiplicacion') {
+            return `${diff.label}: ${basePoints} XP solo si aciertas todas (${operations} ejercicios).`;
+        }
+
+        return `${diff.label}: ${basePoints} XP por cada operación correcta (${operations} operaciones).`;
+    }).filter(Boolean);
 }
 
 // Random integer in [min, max]
