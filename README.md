@@ -1,6 +1,6 @@
 # 🎮 Juego de Matemáticas - math001
 
-Aplicación web educativa para niños de 8-14 años que enseña suma y resta a través de una experiencia interactiva y gamificada con avatares kawaii de animales.
+Aplicación web educativa para niños de 8-14 años que enseña operaciones básicas y lógica numérica (suma, resta, multiplicación, división, sudoku y cuadrado mágico) a través de una experiencia interactiva y gamificada con avatares kawaii de animales.
 
 ![Estado](https://img.shields.io/badge/estado-listo-brightgreen)
 ![Versión](https://img.shields.io/badge/versión-1.0-blue)
@@ -8,16 +8,21 @@ Aplicación web educativa para niños de 8-14 años que enseña suma y resta a t
 
 ## 📋 Descripción
 
-**math001** es un juego educativo que permite a los niños practicar operaciones matemáticas básicas (suma y resta) de una manera visual y atractiva. El juego presenta las operaciones en un formato de cuadrícula similar a papel cuadriculado, donde cada dígito tiene su propia casilla, ayudando a los niños a comprender el concepto de alineación y valor posicional.
+**math001** es un juego educativo que permite practicar operaciones básicas y retos lógicos de una manera visual y atractiva. El juego presenta las operaciones en un formato de cuadrícula similar a papel cuadriculado, donde cada dígito tiene su propia casilla, ayudando a comprender el concepto de alineación y valor posicional.
 
 ## ✨ Características Principales
 
 ### 🎯 Funcionalidades del Juego
-- **Dos tipos de juego**: Suma y Resta
-- **Tres niveles de dificultad**: Fácil, Media, Difícil
-- **Sistema de puntos**: 1, 2 o 5 puntos XP según la dificultad
-- **Cronómetro en tiempo real**: Mide el tiempo de cada partida
-- **Retroalimentación inmediata**: Indica si la respuesta es correcta o incorrecta
+- **Tipos de juego**: Suma, Resta, Tablas de multiplicar, Multiplica (multi-dígito), Divide, Sudoku lógico y Cuadrado mágico.
+- **Tres niveles de dificultad**: Fácil, Media, Difícil (configuran cantidad de operaciones, dígitos y puntos).
+- **Sistema de puntos**:
+  - Suma/Resta: 1/2/5 XP por operación correcta.
+  - Tablas: all-or-nothing por partida usando 1/2/5 XP.
+  - Multiplica y Divide: 4/8/12 XP por operación correcta.
+  - Lógica (Sudoku y Cuadrado mágico): 3/6/10 XP si resuelves el puzzle completo.
+- **Cronómetro en tiempo real**: Mide el tiempo de cada partida (se detiene al usar “Solucionar” en lógica).
+- **Retroalimentación inmediata**: Incluye tablas mini con aciertos/errores; celdas dadas en azul y errores en rojo.
+- **Botón “Solucionar”** en Sudoku y Cuadrado mágico para autocompletar, detener tiempo y desactivar “Finalizar”.
 
 ### 🦁 Sistema de Avatares
 8 adorables avatares kawaii de animales para elegir:
@@ -145,11 +150,8 @@ start index.html
 1. Haz clic en **"Nuevo Juego"**
 2. Selecciona tu **avatar** favorito
 3. Ingresa tu **código de usuario** (3-5 letras/números)
-4. Elige el **tipo de juego** (Suma o Resta)
-5. Selecciona el **nivel de dificultad**:
-   - **Fácil**: 2 números de 2-4 dígitos (1 punto)
-   - **Media**: 3 números de 4-6 dígitos - Suma / 2 números - Resta (2 puntos)
-   - **Difícil**: 4 números de 8 dígitos - Suma / 2 números - Resta (5 puntos)
+4. Elige el **tipo de juego** (Suma, Resta, Tablas, Multiplica, Divide, Sudoku lógico o Cuadrado mágico)
+5. Selecciona el **nivel de dificultad** (Fácil, Media, Difícil) según el tipo
 
 ### 2. Jugar
 1. El cronómetro comenzará automáticamente
@@ -171,20 +173,52 @@ start index.html
 ## 🎯 Configuración de Dificultad
 
 ### Suma
-| Nivel | Cantidad de Números | Dígitos por Número | Puntos |
-|-------|---------------------|-------------------|--------|
-| Fácil | 2 | 2-4 | 1 XP |
-| Media | 3 | 4-6 | 2 XP |
-| Difícil | 4 | 8 | 5 XP |
+| Nivel | Operaciones | Números por operación | Dígitos | Puntos |
+|-------|-------------|-----------------------|---------|--------|
+| Fácil | 2 | 2 | 2-4 | 1 XP c/u |
+| Media | 4 | 3 | 4-6 | 2 XP c/u |
+| Difícil | 6 | 4 | 8 | 5 XP c/u |
 
 ### Resta
-| Nivel | Cantidad de Números | Dígitos por Número | Puntos |
-|-------|---------------------|-------------------|--------|
-| Fácil | 2 | 2-4 | 1 XP |
-| Media | 2 | 4-6 | 2 XP |
-| Difícil | 2 | 8 | 5 XP |
+| Nivel | Operaciones | Números por operación | Dígitos | Puntos |
+|-------|-------------|-----------------------|---------|--------|
+| Fácil | 2 | 2 | 2-4 | 1 XP c/u |
+| Media | 4 | 2 | 4-6 | 2 XP c/u |
+| Difícil | 6 | 2 | 8 | 5 XP c/u |
+> **Nota**: Siempre se asegura resultado positivo.
 
-> **Nota**: En las restas siempre se asegura que el resultado sea positivo.
+### Tablas de multiplicar
+| Nivel | Operaciones | Rango factores | Puntos |
+|-------|-------------|----------------|--------|
+| Fácil | 5 | 2-9 | 1 XP si todas correctas |
+| Media | 10 | 2-9 | 2 XP si todas correctas |
+| Difícil | 15 | 2-9 | 5 XP si todas correctas |
+
+### Multiplica (multi-dígito)
+| Nivel | Operaciones | Factor 1 | Factor 2 | Puntos |
+|-------|-------------|----------|----------|--------|
+| Fácil | 2 | 2-4 dígitos | 1 dígito | 4 XP c/u |
+| Media | 2 | 6 dígitos | 2 dígitos | 8 XP c/u |
+| Difícil | 2 | 8 dígitos | 3 dígitos | 12 XP c/u |
+
+### Divide
+| Nivel | Operaciones | Dividendo | Divisor | Puntos |
+|-------|-------------|-----------|---------|--------|
+| Fácil | 2 | 4 dígitos | 1 dígito | 4 XP c/u |
+| Media | 2 | 5 dígitos | 1 dígito | 8 XP c/u |
+| Difícil | 2 | 6 dígitos | 2 dígitos | 12 XP c/u |
+
+### Sudoku lógico
+- Tamaños: 3x3 (Fácil), 4x4 (Media), 5x5 (Difícil).
+- Objetivo: no repetir números en filas/columnas.
+- Puntos: 3/6/10 XP si el puzzle completo es correcto.
+- Botón **Solucionar**: autocompleta, desactiva “Finalizar” y detiene el tiempo.
+
+### Cuadrado mágico
+- Tamaños variables con sumas objetivo dinámicas (siempre 0-9 por casilla).
+- Puntos: 3/6/10 XP si el puzzle completo es correcto.
+- Botón **Solucionar**: autocompleta, desactiva “Finalizar” y detiene el tiempo.
+- En resultados: celdas dadas en azul, errores en rojo.
 
 ## 🎓 Valor Educativo
 
