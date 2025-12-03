@@ -99,7 +99,10 @@
                                 <span class="option-label">Divide 2dg</span>
                             </button>
                         </div>
-                        <div id="selected-type-display" class="type-selection-state">Selecciona un tipo de juego</div>
+                        <div class="type-selection-row">
+                            <div id="selected-type-display" class="type-selection-state">Selecciona un tipo de juego</div>
+                            <button id="btn-type-info" class="type-info-btn" type="button" aria-label="Información del tipo de juego" disabled>ℹ️</button>
+                        </div>
                     </div>
                 </div>
 
@@ -241,6 +244,20 @@
                         <!-- Leaderboard items will be inserted here -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de información del tipo de juego -->
+    <div id="type-info-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="type-info-title">
+            <button id="type-info-close" class="modal-close" aria-label="Cerrar">✖</button>
+            <div class="modal-icon" id="type-info-icon">ℹ️</div>
+            <h3 class="modal-title" id="type-info-title">Tipo de juego</h3>
+            <p class="modal-description" id="type-info-description"></p>
+            <div class="modal-points">
+                <h4>Cómo se consiguen los puntos</h4>
+                <ul id="type-info-points"></ul>
             </div>
         </div>
     </div>

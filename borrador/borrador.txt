@@ -306,6 +306,18 @@ MODIFICAR en Menu:
 	- Hay que presentarlo de forma un poco más amigable pero cada opción no debe ocupar más de lo que ya ocupa
 	- Una vez que el usuario selecciona un Tipo de juego debe ser visible el seleccionado, ahora no se ve a simple vista
 
+---
+
+[v14]
+
+AGREGAR en la pantalla "Configurar Nuevo Juego":
+- Cuando el usuario seleccione un Tipo de juego, donde se muestra "Tipo seleccionado: XXX"
+	poner a la derecha un icono de información.
+- Al pulsar el icono de información aparece una ventana modal contextual por así decirlo
+	y aparece un dibujo pequeño y centrado que represente la esencia del juego,
+	debajo una breve explicación del juego, y al final el criterio de obtención 
+	de puntos que se puede conseguir en función del nivel de dificultad
+
 --- 
 
 Propuestas a futuro:
