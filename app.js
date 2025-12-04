@@ -72,9 +72,9 @@ const DIFFICULTY_CONFIG = {
         dificil: { operations: 1 }
     },
     calcula_areas: {
-        facil: { operations: 2, rects: 4 },
-        media: { operations: 2, rects: 8 },
-        dificil: { operations: 2, rects: 15 }
+        facil: { operations: 1, rects: 4, minSize: 4, maxSize: 6 },
+        media: { operations: 2, rects: 8, minSize: 3, maxSize: 6 },
+        dificil: { operations: 2, rects: 20, minWidth: 2, minHeight: 4, maxSize: 6 }
     },
     encadenados: {
         facil: { operations: 1, initialDigits: 1, stepsMin: 2, stepsMax: 4, ops: ['+', '-'] },
@@ -526,24 +526,27 @@ function buildChainedTokens(start, steps) {
 }
 
 // Generar figura de rectángulos en una cuadrícula y calcular área de la unión
-function generateAreaFigure(rectCount) {
+function generateAreaFigure(rectCount, minCells = 2, maxCellsLimit = 6, opts = {}) {
     const CELL = 24; // px por celda
     const gridSize = 18; // 18x18 celdas
     const margin = 1;
     const maxCells = gridSize - 2 * margin;
-    const minCount = 6;
-    const maxCount = 10;
-    const count = Math.max(minCount, Math.min(maxCount, rectCount));
+    const count = Math.max(1, rectCount);
     const rects = [];
     const filled = new Set();
     const color = AREA_COLORS[Math.floor(Math.random() * AREA_COLORS.length)];
 
     const clampGrid = (val) => Math.round(val / CELL) * CELL;
 
+    const minW = opts.minWidth || minCells;
+    const minH = opts.minHeight || minCells;
+    const maxW = opts.maxWidth || maxCellsLimit;
+    const maxH = opts.maxHeight || maxCellsLimit;
+
     // Primer rectángulo
     const placeFirst = () => {
-        const wCells = randomInRange(2, Math.min(6, maxCells));
-        const hCells = randomInRange(2, Math.min(6, maxCells));
+        const wCells = randomInRange(minW, Math.min(maxW, maxCells));
+        const hCells = randomInRange(minH, Math.min(maxH, maxCells));
         const wPx = wCells * CELL;
         const hPx = hCells * CELL;
         const maxX = (gridSize - margin) * CELL - wPx;
@@ -561,8 +564,8 @@ function generateAreaFigure(rectCount) {
 
         while (!placed && attempts < 300) {
             attempts++;
-            const wCells = randomInRange(2, Math.min(6, maxCells));
-            const hCells = randomInRange(2, Math.min(6, maxCells));
+            const wCells = randomInRange(minW, Math.min(maxW, maxCells));
+            const hCells = randomInRange(minH, Math.min(maxH, maxCells));
             const wPx = wCells * CELL;
             const hPx = hCells * CELL;
 
@@ -610,8 +613,8 @@ function generateAreaFigure(rectCount) {
 
         // Fallback si no se pudo colocar tocando (evitar bloqueo)
         if (!placed) {
-            const wCells = 2;
-            const hCells = 2;
+            const wCells = minW;
+            const hCells = minH;
             const wPx = wCells * CELL;
             const hPx = hCells * CELL;
             const maxX = (gridSize - margin) * CELL - wPx;
@@ -1051,7 +1054,12 @@ function generateOperations() {
                 type: 'division_2dg'
             });
         } else if (gameState.game.type === 'calcula_areas') {
-            const figure = generateAreaFigure(config.rects);
+            const minSize = config.minSize || 2;
+            const maxSize = config.maxSize || 6;
+            const figure = generateAreaFigure(config.rects, minSize, maxSize, {
+                minWidth: config.minWidth,
+                minHeight: config.minHeight
+            });
             gameState.game.operations.push({
                 type: 'calcula_areas',
                 result: figure.area,
