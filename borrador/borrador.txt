@@ -476,6 +476,59 @@ FIX juego "Números encadenados":
 
 ---
 
+[v27]
+
+AGREGAR nuevo juego "Calcula áreas":
+- Se genera una figura compuesta de rectangulos tal como se hace en probe001,
+	el usuario debe calcular el área de la figura, pongamos que cada cuadrado
+	corresponde a un metro cuadrado en la realidad.
+- Dificultad:
+	- Fácil: 2 figuras compuestas por 4 rectangulos; 1 puntos por acierto
+	- Medio: 2 figuras compuestas por 8 rectangulos; 3 puntos por acierto
+	- Difícil: 2 figuras compuestas por 15 rectangulos; 5 puntos por acierto
+- Al pulsar botón Finalizar se muestra:
+	- Siempre -> El area correcta
+	- Si incorrecto -> Además la respuesta que ha dado el usuario
+
+---
+
+[v28]
+
+Revisión de requisitos del juego "Calcula áreas":
+- Generación de figura compuesta por rectangulos solapados usando canvas.
+- Fondo: cuadrícula estilo hoja cuadriculada; dentro del canvas se dibujan la rejilla y los rectángulos.
+- Rectángulos: entre 6 y 10 por carga; alineados a la cuadrícula; margen de 1 cuadro libre en el borde; no - pueden ocupar exactamente el mismo espacio ni estar completamente dentro de otro; todos deben tocarse - por lados o esquinas; colocados aleatoriamente; tamaños en celdas (ajustar si no caben).
+- Visual: color sólido único para todos (amarillo/azul/rojo/verde/negro, uno elegido al azar); línea y - relleno del mismo color.
+- Cálculo: tras dibujar, calcular y mostrar el área total en cm² (1 cuadro = 1 cm²); loguear pasos del - cálculo de área.
+- Dificultad:
+	- Fácil: 2 figuras compuestas por 4 rectangulos; 1 puntos por acierto
+	- Medio: 2 figuras compuestas por 8 rectangulos; 3 puntos por acierto
+	- Difícil: 2 figuras compuestas por 15 rectangulos; 5 puntos por acierto
+- Al pulsar botón Finalizar se muestra:
+	- Siempre -> El area correcta
+	- Si incorrecto -> Además la respuesta que ha dado el usuario
+
+---
+
+[v29]
+
+MODIFICAR juego "Calcula áreas":
+- Hay que ampliar el ancho de la caja de texto de respuesta para que quepan 8 digitos
+- Linias y relleno de todos los rectangulos totalmente solido que puede ser de uno de estos colores: amarillo, azul, rojo, verde, negro 
+- Todos los rectangulos debe ser del mismo color
+
+---
+
+[v30]
+
+MODIFICAR juego "Calcula áreas":
+- Dificultad:
+	- Fácil: 1 figuras compuestas por 4 rectangulos que no tengan menos de 4 ni de ancho ni de alto; 1 puntos por acierto
+	- Medio: 2 figuras compuestas por 8 rectangulos que no tengan menos de 3 ni de ancho ni de alto; 3 puntos por acierto
+	- Difícil: 2 figuras compuestas por 20 rectangulos que no tengan menos de 2 de ancho y que no tenga menos de 4 de alto; 5 puntos por acierto
+
+---
+
 Propuestas a futuro:
 - Mejorar el sistema de Recompensas
 - Incorporar otros Avatar de usuario

@@ -71,6 +71,11 @@ const DIFFICULTY_CONFIG = {
         media: { operations: 1 },
         dificil: { operations: 1 }
     },
+    calcula_areas: {
+        facil: { operations: 1, rects: 4, minSize: 4, maxSize: 6 },
+        media: { operations: 2, rects: 8, minSize: 3, maxSize: 6 },
+        dificil: { operations: 2, rects: 20, minWidth: 2, minHeight: 4, maxSize: 6 }
+    },
     encadenados: {
         facil: { operations: 1, initialDigits: 1, stepsMin: 2, stepsMax: 4, ops: ['+', '-'] },
         media: { operations: 2, initialDigits: 2, stepsMin: 4, stepsMax: 4, ops: ['+', '-'] },
@@ -119,6 +124,11 @@ const GAME_INFO = {
         icon: '🔲',
         description: 'Rellena la cuadrícula para que todas las filas, columnas y diagonales sumen lo mismo.'
     },
+    calcula_areas: {
+        title: 'Calcula áreas',
+        icon: '📐',
+        description: 'Observa la figura compuesta de rectángulos y calcula el área total en metros cuadrados (1 cuadro = 1 m²).'
+    },
     encadenados: {
         title: 'Números encadenados',
         icon: '🔗',
@@ -149,6 +159,14 @@ const CHAIN_POINTS = {
     media: 3,
     dificil: 5
 };
+
+const AREA_POINTS = {
+    facil: 1,
+    media: 3,
+    dificil: 5
+};
+
+const AREA_COLORS = ['#ffd54f', '#4fa3ff', '#ff6b6b', '#4caf50', '#111111'];
 
 const BASE_LOGIC_PUZZLES = {
     sudoku: {
@@ -507,6 +525,183 @@ function buildChainedTokens(start, steps) {
     return expr.split(' ').filter(Boolean);
 }
 
+// Generar figura de rectángulos en una cuadrícula y calcular área de la unión
+function generateAreaFigure(rectCount, minCells = 2, maxCellsLimit = 6, opts = {}) {
+    const CELL = 24; // px por celda
+    const gridSize = 18; // 18x18 celdas
+    const margin = 1;
+    const maxCells = gridSize - 2 * margin;
+    const count = Math.max(1, rectCount);
+    const rects = [];
+    const filled = new Set();
+    const color = AREA_COLORS[Math.floor(Math.random() * AREA_COLORS.length)];
+
+    const clampGrid = (val) => Math.round(val / CELL) * CELL;
+
+    const minW = opts.minWidth || minCells;
+    const minH = opts.minHeight || minCells;
+    const maxW = opts.maxWidth || maxCellsLimit;
+    const maxH = opts.maxHeight || maxCellsLimit;
+
+    // Primer rectángulo
+    const placeFirst = () => {
+        const wCells = randomInRange(minW, Math.min(maxW, maxCells));
+        const hCells = randomInRange(minH, Math.min(maxH, maxCells));
+        const wPx = wCells * CELL;
+        const hPx = hCells * CELL;
+        const maxX = (gridSize - margin) * CELL - wPx;
+        const maxY = (gridSize - margin) * CELL - hPx;
+        const x = clampGrid(randomInRange(margin * CELL, maxX));
+        const y = clampGrid(randomInRange(margin * CELL, maxY));
+        rects.push({ x, y, w: wPx, h: hPx });
+    };
+
+    placeFirst();
+
+    for (let i = 1; i < count; i++) {
+        let placed = false;
+        let attempts = 0;
+
+        while (!placed && attempts < 300) {
+            attempts++;
+            const wCells = randomInRange(minW, Math.min(maxW, maxCells));
+            const hCells = randomInRange(minH, Math.min(maxH, maxCells));
+            const wPx = wCells * CELL;
+            const hPx = hCells * CELL;
+
+            // Elige un rect existente como referencia para tocarlo
+            const refIdx = Math.floor(Math.random() * rects.length);
+            const ref = rects[refIdx];
+            const dirs = [
+                { dx: -1, dy: 0 },  // izquierda
+                { dx: 1, dy: 0 },   // derecha
+                { dx: 0, dy: -1 },  // arriba
+                { dx: 0, dy: 1 },   // abajo
+                { dx: -1, dy: -1 }, // esquina sup izq
+                { dx: 1, dy: -1 },  // esquina sup der
+                { dx: -1, dy: 1 },  // esquina inf izq
+                { dx: 1, dy: 1 }    // esquina inf der
+            ];
+            const dir = dirs[Math.floor(Math.random() * dirs.length)];
+
+            let x = ref.x + dir.dx * (dir.dx === 0 ? 0 : ref.w - CELL);
+            let y = ref.y + dir.dy * (dir.dy === 0 ? 0 : ref.h - CELL);
+
+            if (dir.dx === -1) x = ref.x - wPx + CELL;
+            if (dir.dx === 1) x = ref.x + ref.w - CELL;
+            if (dir.dy === -1) y = ref.y - hPx + CELL;
+            if (dir.dy === 1) y = ref.y + ref.h - CELL;
+
+            x = clampGrid(x);
+            y = clampGrid(y);
+
+            // En límites con margen
+            if (x < margin * CELL || y < margin * CELL || x + wPx > (gridSize - margin) * CELL || y + hPx > (gridSize - margin) * CELL) {
+                continue;
+            }
+
+            // No duplicar posición exacta ni estar contenido totalmente
+            const duplicate = rects.some(r => r.x === x && r.y === y && r.w === wPx && r.h === hPx);
+            if (duplicate) continue;
+
+            const contained = rects.some(r => x >= r.x && y >= r.y && x + wPx <= r.x + r.w && y + hPx <= r.y + r.h);
+            if (contained) continue;
+
+            rects.push({ x, y, w: wPx, h: hPx });
+            placed = true;
+        }
+
+        // Fallback si no se pudo colocar tocando (evitar bloqueo)
+        if (!placed) {
+            const wCells = minW;
+            const hCells = minH;
+            const wPx = wCells * CELL;
+            const hPx = hCells * CELL;
+            const maxX = (gridSize - margin) * CELL - wPx;
+            const maxY = (gridSize - margin) * CELL - hPx;
+            const x = clampGrid(randomInRange(margin * CELL, maxX));
+            const y = clampGrid(randomInRange(margin * CELL, maxY));
+            rects.push({ x, y, w: wPx, h: hPx });
+        }
+    }
+
+    // Compute area by grid cells (1 cell = 1 m²)
+    rects.forEach(r => {
+        const startCol = r.x / CELL;
+        const endCol = (r.x + r.w) / CELL;
+        const startRow = r.y / CELL;
+        const endRow = (r.y + r.h) / CELL;
+        for (let c = startCol; c < endCol; c++) {
+            for (let rr = startRow; rr < endRow; rr++) {
+                filled.add(`${c},${rr}`);
+            }
+        }
+    });
+
+    return {
+        rects,
+        gridSize,
+        area: filled.size,
+        color
+    };
+}
+
+// Calcula el área de la unión de rectángulos en cm² (1 celda = 1 cm²)
+function computeArea(rects, cellSize) {
+    console.log('=== Cálculo de área ===');
+    const filled = new Set();
+
+    rects.forEach(({ x, y, w, h }, idx) => {
+        const startCol = Math.round(x / cellSize);
+        const endCol = Math.round((x + w) / cellSize);
+        const startRow = Math.round(y / cellSize);
+        const endRow = Math.round((y + h) / cellSize);
+        console.log(`Rect ${idx}: cols ${startCol}-${endCol - 1}, rows ${startRow}-${endRow - 1}`);
+
+        for (let c = startCol; c < endCol; c++) {
+            for (let r = startRow; r < endRow; r++) {
+                filled.add(`${c},${r}`);
+            }
+        }
+    });
+
+    console.log(`Celdas únicas ocupadas: ${filled.size}`);
+    return filled.size; // cm²
+}
+
+// Dibuja la figura de rectángulos sobre un canvas con cuadrícula
+function drawAreaFigureCanvas(operation, canvasEl) {
+    const ctxCanvas = canvasEl.getContext('2d');
+    const cell = 24;
+    ctxCanvas.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+    // fondo de cuadricula
+    ctxCanvas.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctxCanvas.lineWidth = 1;
+    for (let x = 0.5; x < canvasEl.width; x += cell) {
+        ctxCanvas.beginPath();
+        ctxCanvas.moveTo(x, 0);
+        ctxCanvas.lineTo(x, canvasEl.height);
+        ctxCanvas.stroke();
+    }
+    for (let y = 0.5; y < canvasEl.height; y += cell) {
+        ctxCanvas.beginPath();
+        ctxCanvas.moveTo(0, y);
+        ctxCanvas.lineTo(canvasEl.width, y);
+        ctxCanvas.stroke();
+    }
+
+    // dibujar rectángulos
+    const color = operation.color || '#4fa3ff';
+    ctxCanvas.fillStyle = color;
+    ctxCanvas.strokeStyle = color;
+    ctxCanvas.lineWidth = 2;
+    operation.rects.forEach(r => {
+        ctxCanvas.fillRect(r.x, r.y, r.w, r.h);
+        ctxCanvas.strokeRect(r.x, r.y, r.w, r.h);
+    });
+}
+
 function generateSudokuPuzzle(difficulty) {
     const base = BASE_LOGIC_PUZZLES.sudoku[difficulty];
     const size = base.solution.length;
@@ -708,6 +903,7 @@ function buildScoringLines(type) {
     const heavyTypes = ['multiplica_compleja', 'division', 'division_2dg'];
     const isHeavy = heavyTypes.includes(type);
     const isChained = type === 'encadenados';
+    const isArea = type === 'calcula_areas';
 
     return difficultyOrder.map(diff => {
         const cfg = config[diff.key];
@@ -723,6 +919,9 @@ function buildScoringLines(type) {
         } else if (isChained) {
             const basePoints = CHAIN_POINTS[diff.key];
             return `${diff.label}: ${basePoints} XP por cada resultado final correcto (${operations} cadenas).`;
+        } else if (isArea) {
+            const basePoints = AREA_POINTS[diff.key];
+            return `${diff.label}: ${basePoints} XP por cada figura resuelta (${operations} figuras).`;
         } else {
             const basePoints = POINTS_CONFIG[diff.key];
             if (type === 'multiplicacion') {
@@ -854,6 +1053,21 @@ function generateOperations() {
                 intermediateSteps: intermediateSteps,
                 type: 'division_2dg'
             });
+        } else if (gameState.game.type === 'calcula_areas') {
+            const minSize = config.minSize || 2;
+            const maxSize = config.maxSize || 6;
+            const figure = generateAreaFigure(config.rects, minSize, maxSize, {
+                minWidth: config.minWidth,
+                minHeight: config.minHeight
+            });
+            gameState.game.operations.push({
+                type: 'calcula_areas',
+                result: figure.area,
+                rects: figure.rects,
+                area: figure.area,
+                gridSize: figure.gridSize,
+                color: figure.color
+            });
         } else if (gameState.game.type === 'encadenados') {
             // Números encadenados: generar cadena de operaciones sobre un número inicial
             const startNumber = randomNumber(config.initialDigits);
@@ -963,6 +1177,7 @@ function renderGameScreen() {
     else if (gameState.game.type === 'division_2dg') typeLabel = 'Divide 2dg';
     else if (gameState.game.type === 'sudoku') typeLabel = 'Sudoku lógico';
     else if (gameState.game.type === 'cuadrado_magico') typeLabel = 'Cuadrado mágico';
+    else if (gameState.game.type === 'calcula_areas') typeLabel = 'Calcula áreas';
     else if (gameState.game.type === 'encadenados') typeLabel = 'Números encadenados';
     else typeLabel = 'Tablas multiplicar';
 
@@ -1006,6 +1221,16 @@ function renderGameScreen() {
             const opIndex = parseInt(btn.dataset.opIndex, 10);
             solveSudoku(opIndex, btn);
         });
+    });
+
+    // Dibujar figuras de área
+    gameState.game.operations.forEach((operation, index) => {
+        if (operation.type === 'calcula_areas') {
+            const canvasEl = document.getElementById(`area-canvas-${index}`);
+            if (canvasEl) {
+                drawAreaFigureCanvas(operation, canvasEl);
+            }
+        }
     });
 }
 
@@ -1233,6 +1458,15 @@ function renderOperation(operation, opIndex) {
         html += `<input type="text" class="digit-input chain-result" maxlength="8" data-op-index="${opIndex}" pattern="[0-9]+" inputmode="numeric">`;
 
         html += '</div>';
+        html += '</div>';
+
+    } else if (operation.type === 'calcula_areas') {
+        html += '<div class="area-figure">';
+        html += `<canvas class="area-canvas" id="area-canvas-${opIndex}" width="432" height="432" aria-label="Figura de rectángulos para calcular área"></canvas>`;
+        html += '</div>';
+        html += '<div class="area-input-row">';
+        html += '<label>Área total (m²):</label>';
+        html += `<input type="text" class="digit-input area-result" maxlength="8" data-op-index="${opIndex}" pattern="[0-9]+" inputmode="numeric">`;
         html += '</div>';
 
     } else {
@@ -1622,6 +1856,12 @@ function finishGame() {
             userAnswer = isNaN(value) ? null : value;
             isCorrect = userAnswer === correctAnswer;
 
+        } else if (operation.type === 'calcula_areas') {
+            const input = document.querySelector(`.digit-input[data-op-index="${opIndex}"]`);
+            const value = parseInt(input?.value || '', 10);
+            userAnswer = isNaN(value) ? null : value;
+            isCorrect = userAnswer === correctAnswer;
+
         } else {
             // Standard validation
             const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"]`);
@@ -1658,6 +1898,8 @@ function finishGame() {
         points = totalCorrect === totalOps ? LOGIC_POINTS[gameState.game.difficulty] : 0;
     } else if (gameState.game.type === 'encadenados') {
         points = totalCorrect * CHAIN_POINTS[gameState.game.difficulty];
+    } else if (gameState.game.type === 'calcula_areas') {
+        points = totalCorrect * AREA_POINTS[gameState.game.difficulty];
     } else if (specialMultiplyDivide.includes(gameState.game.type)) {
         points = totalCorrect * MULT_DIV_POINTS[gameState.game.difficulty];
     } else {
@@ -1735,6 +1977,12 @@ function showResults(results, totalCorrect, totalOps, points) {
             correctFormula = `${expression} = ${result.correctAnswer}`;
             if (!result.isCorrect) {
                 userFormula = `${expression} = ${result.userAnswer ?? ''}`;
+            }
+
+        } else if (gameState.game.type === 'calcula_areas') {
+            correctFormula = `Área correcta: ${result.correctAnswer} m²`;
+            if (!result.isCorrect) {
+                userFormula = `Tu respuesta: ${result.userAnswer ?? ''} m²`;
             }
 
         } else if (gameState.game.type === 'suma') {
@@ -1896,6 +2144,7 @@ function saveToHistory(totalCorrect, totalOps, points) {
                 gameState.game.type === 'multiplica_compleja' ? 'Multiplica' :
                     gameState.game.type === 'division' ? 'Divide' :
                         gameState.game.type === 'division_2dg' ? 'Divide 2dg' :
+                            gameState.game.type === 'calcula_areas' ? 'Calcula áreas' :
                             gameState.game.type === 'encadenados' ? 'Números encadenados' :
                             gameState.game.type === 'sudoku' ? 'Sudoku lógico' :
                                 gameState.game.type === 'cuadrado_magico' ? 'Cuadrado mágico' : 'Tablas',
