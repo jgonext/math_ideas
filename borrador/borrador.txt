@@ -465,6 +465,17 @@ MODIFICAR juego "Números encadenados":
 
 ---
 
+[v26]
+
+FIX juego "Números encadenados":
+- En cada eslabon de la cadena no puede haber una operación que de resultado negativo, es decir que:
+	- OK -> ( ( ( 1 + 2 ) + 3 ) - 4 ),   4-4=0 es valido
+	- KO -> ( ( 4 - 2 ) - 3 )  4-2=2 esta ok, pero en el siguiente paso al restar 2-3 ya da -1 que no es válido
+	- KO -> ( ( 4 - 5 ) + 3 )  ya el 4-5 da -1 que no es valido
+- En general cuando se detecte esto el segundo numero directamente que sea un 0
+
+---
+
 Propuestas a futuro:
 - Mejorar el sistema de Recompensas
 - Incorporar otros Avatar de usuario
