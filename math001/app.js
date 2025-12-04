@@ -1466,7 +1466,7 @@ function renderOperation(operation, opIndex) {
         html += '</div>';
         html += '<div class="area-input-row">';
         html += '<label>Área total (m²):</label>';
-        html += `<input type="text" class="digit-input area-result" maxlength="8" data-op-index="${opIndex}" pattern="[0-9]+" inputmode="numeric">`;
+        html += `<input type="text" class="digit-input digit-input-calcula area-result" maxlength="8" data-op-index="${opIndex}" pattern="[0-9]+" inputmode="numeric">`;
         html += '</div>';
 
     } else {
