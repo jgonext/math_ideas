@@ -34,5 +34,21 @@ MODIFICAR:
     del CANVAS de margen que ningun rectangulo podrá pisar
 - Ningun rectangulo debe estar dentro completamente de otro
 
+---
+
+[v4]
+
+MODIFICAR:
+- Linias y relleno de todos los rectangulos totalmente solido que puede ser de uno de estos colores: amarillo, azul, rojo, verde, negro 
+- Todos los rectangulos debe ser del mismo color
+
+---
+
+[v5]
+
+AGREGAR:
+- Una vez constituida la figura por todos los rectangulos, 
+    calcula el area de la figura teniendo en cuenta que 1 cuadro equivale a 1cm
+- Traza por log los pasos
 
 ---

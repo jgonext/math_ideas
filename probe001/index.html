@@ -31,64 +31,32 @@
       border: 2px solid #c7d1dc;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
     canvas {
       display: block;
       background: transparent;
       border: 1px solid #c7d1dc;
     }
+    .perimeter-label {
+      font-family: 'Segoe UI', sans-serif;
+      font-weight: 700;
+      color: #1f4b99;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div class="canvas-wrap">
     <canvas id="board" width="500" height="360" aria-label="Lienzo con tres cuadrados transparentes unidos por lados"></canvas>
+    <div id="perimeter" class="perimeter-label"></div>
   </div>
 
   <script>
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
-
-    function makePattern(type, color) {
-      const p = document.createElement('canvas');
-      p.width = p.height = 12;
-      const pc = p.getContext('2d');
-      pc.fillStyle = 'rgba(0,0,0,0)';
-      pc.fillRect(0, 0, 12, 12);
-      pc.strokeStyle = color;
-      pc.fillStyle = color;
-      pc.lineWidth = 2;
-
-      if (type === 'stripes') {
-        pc.beginPath();
-        pc.moveTo(0, 0);
-        pc.lineTo(12, 12);
-        pc.stroke();
-        pc.beginPath();
-        pc.moveTo(-4, 0);
-        pc.lineTo(8, 12);
-        pc.stroke();
-        pc.beginPath();
-        pc.moveTo(4, 0);
-        pc.lineTo(16, 12);
-        pc.stroke();
-      } else if (type === 'dots') {
-        pc.beginPath();
-        pc.arc(3, 3, 2, 0, Math.PI * 2);
-        pc.fill();
-        pc.beginPath();
-        pc.arc(9, 9, 2, 0, Math.PI * 2);
-        pc.fill();
-      } else if (type === 'cross') {
-        pc.beginPath();
-        pc.moveTo(0, 6);
-        pc.lineTo(12, 6);
-        pc.moveTo(6, 0);
-        pc.lineTo(6, 12);
-        pc.stroke();
-      }
-
-      return ctx.createPattern(p, 'repeat');
-    }
 
     function drawGrid() {
       const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'), 10) || 24;
@@ -242,24 +210,73 @@
         }
       }
 
-      const patterns = [
-        makePattern('stripes', 'rgba(31, 75, 153, 0.25)'),
-        makePattern('dots', 'rgba(220, 90, 70, 0.35)'),
-        makePattern('cross', 'rgba(43, 166, 128, 0.3)'),
-        makePattern('stripes', 'rgba(240, 180, 50, 0.25)'),
-        makePattern('dots', 'rgba(120, 90, 200, 0.3)'),
-        makePattern('cross', 'rgba(70, 160, 200, 0.28)')
-      ];
+      const solidColors = ['#ffd54f', '#4fa3ff', '#ff6b6b', '#4caf50', '#111111'];
 
+      const unifiedColor = solidColors[Math.floor(Math.random() * solidColors.length)];
+      const rects = [];
       sizes.forEach((size, idx) => {
-        const pattern = patterns[idx % patterns.length];
         const { x, y } = positions[idx];
-        ctx.fillStyle = pattern;
+        ctx.fillStyle = unifiedColor;
+        ctx.strokeStyle = unifiedColor;
         ctx.fillRect(x, y, size, size);
         ctx.strokeRect(x, y, size, size);
+        rects.push({ x, y, w: size, h: size });
       });
 
+      const perimeter = computePerimeter(rects);
+      const area = computeArea(rects, gap);
+      const perimEl = document.getElementById('perimeter');
+      const cmPerUnit = gap; // 1 cuadro = 1 cm
+      const perimeterCm = (perimeter / cmPerUnit).toFixed(2);
+      const areaCm = area.toFixed(2);
+      perimEl.textContent = `Perímetro total: ${perimeter} px (${perimeterCm} cm) · Área: ${areaCm} cm²`;
+
       ctx.restore();
+    }
+
+    // Calcula el perímetro de la unión de rectángulos (anula bordes compartidos)
+    function computePerimeter(rects) {
+      const edgeMap = new Map();
+
+      const addEdge = (key, length) => {
+        if (edgeMap.has(key)) edgeMap.delete(key);
+        else edgeMap.set(key, length);
+      };
+
+      rects.forEach(({ x, y, w, h }) => {
+        addEdge(`H:${y}:${x}:${x + w}`, w);
+        addEdge(`H:${y + h}:${x}:${x + w}`, w);
+        addEdge(`V:${x}:${y}:${y + h}`, h);
+        addEdge(`V:${x + w}:${y}:${y + h}`, h);
+      });
+
+      let perimeter = 0;
+      edgeMap.forEach(len => { perimeter += len; });
+      console.log('Perímetro (px):', perimeter);
+      return perimeter;
+    }
+
+    // Calcula el área de la unión en cm² (1 cuadro = 1 cm)
+    function computeArea(rects, gap) {
+      console.log('=== Cálculo de área ===');
+      const filled = new Set();
+
+      rects.forEach(({ x, y, w, h }, idx) => {
+        const startCol = Math.round(x / gap);
+        const endCol = Math.round((x + w) / gap);
+        const startRow = Math.round(y / gap);
+        const endRow = Math.round((y + h) / gap);
+        console.log(`Rect ${idx}: cols ${startCol}-${endCol - 1}, rows ${startRow}-${endRow - 1}`);
+
+        for (let c = startCol; c < endCol; c++) {
+          for (let r = startRow; r < endRow; r++) {
+            filled.add(`${c},${r}`);
+          }
+        }
+      });
+
+      console.log(`Celdas únicas ocupadas: ${filled.size}`);
+      return filled.size; // cm²
     }
 
     drawSquares();
