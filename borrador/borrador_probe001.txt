@@ -1,0 +1,38 @@
+
+[v1]
+
+CREAR prueba de concepto como aplicacion html5+javascript en la subcarpeta "probe001" que use solo una pagina HMTL
+- Usar el CANVAS para trazar lineas que formen 2 cuadrados unidos por un lados
+- El fondo debe emular una hoja cuadriculada de libreta de colegio
+
+---
+
+[v2]
+
+MODIFICAR:
+- Ahora son 3 rectangulos solapados por un lado
+- Los rectangulos deben ser de tamaños distintos
+- Los rectangulos deben ser transparentes
+- Los rectangulos deben estar encima de la hoja cuadriculada,
+    y estar alineados con los de la cuadriculas
+
+---
+
+[v3]
+
+MODIFICAR:
+- La cuadricula debe estar dentro del CANVAS
+- Los rectangulos deben solapar un lado, compartir la misma linea 
+    o parte de la misma linea
+- El fondo de los rectangulos debe ser cada uno de un color pero 
+    no un color solido sino con un patron de rayas o puntos
+- Los rectangulos pueden solaparse en linia izquierda, derecha, arriba, abajo, e incluso en sus esquinas. En cualquier caso, todos los rectangulos se deben tocar por algun sitio
+- Ningun rectangulo puede ocupar exactamente el mismo 
+- Cada vez que cargue la pagina el numero de rectangulos 
+    será diferente, e irá de 6 a 10. Pero todos deben caber 
+    dentro del CANVAS, y debe haber siempre 1 cuadrado del borde 
+    del CANVAS de margen que ningun rectangulo podrá pisar
+- Ningun rectangulo debe estar dentro completamente de otro
+
+
+---

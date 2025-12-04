@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Probe 001 - Canvas de cuadrados</title>
+  <style>
+    :root {
+      --grid-gap: 24px;
+      --grid-color: #d8dfe6;
+      --bg-color: #fdfefe;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-color);
+      background-image:
+        linear-gradient(0deg, transparent calc(var(--grid-gap) - 1px), var(--grid-color) calc(var(--grid-gap) - 1px), var(--grid-color) var(--grid-gap)),
+        linear-gradient(90deg, transparent calc(var(--grid-gap) - 1px), var(--grid-color) calc(var(--grid-gap) - 1px), var(--grid-color) var(--grid-gap));
+      background-size: var(--grid-gap) var(--grid-gap), var(--grid-gap) var(--grid-gap);
+    }
+    .canvas-wrap {
+      padding: 32px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 2px solid #c7d1dc;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    canvas {
+      display: block;
+      background: transparent;
+      border: 1px solid #c7d1dc;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-wrap">
+    <canvas id="board" width="500" height="360" aria-label="Lienzo con tres cuadrados transparentes unidos por lados"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+
+    function makePattern(type, color) {
+      const p = document.createElement('canvas');
+      p.width = p.height = 12;
+      const pc = p.getContext('2d');
+      pc.fillStyle = 'rgba(0,0,0,0)';
+      pc.fillRect(0, 0, 12, 12);
+      pc.strokeStyle = color;
+      pc.fillStyle = color;
+      pc.lineWidth = 2;
+
+      if (type === 'stripes') {
+        pc.beginPath();
+        pc.moveTo(0, 0);
+        pc.lineTo(12, 12);
+        pc.stroke();
+        pc.beginPath();
+        pc.moveTo(-4, 0);
+        pc.lineTo(8, 12);
+        pc.stroke();
+        pc.beginPath();
+        pc.moveTo(4, 0);
+        pc.lineTo(16, 12);
+        pc.stroke();
+      } else if (type === 'dots') {
+        pc.beginPath();
+        pc.arc(3, 3, 2, 0, Math.PI * 2);
+        pc.fill();
+        pc.beginPath();
+        pc.arc(9, 9, 2, 0, Math.PI * 2);
+        pc.fill();
+      } else if (type === 'cross') {
+        pc.beginPath();
+        pc.moveTo(0, 6);
+        pc.lineTo(12, 6);
+        pc.moveTo(6, 0);
+        pc.lineTo(6, 12);
+        pc.stroke();
+      }
+
+      return ctx.createPattern(p, 'repeat');
+    }
+
+    function drawGrid() {
+      const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'), 10) || 24;
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+
+      for (let x = 0; x <= canvas.width; x += gap) {
+        ctx.beginPath();
+        ctx.moveTo(x + 0.5, 0);
+        ctx.lineTo(x + 0.5, canvas.height);
+        ctx.stroke();
+      }
+
+      for (let y = 0; y <= canvas.height; y += gap) {
+        ctx.beginPath();
+        ctx.moveTo(0, y + 0.5);
+        ctx.lineTo(canvas.width, y + 0.5);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawSquares() {
+      drawGrid();
+      ctx.save();
+      ctx.translate(0.5, 0.5); // evita líneas borrosas
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(31, 75, 153, 0.6)';
+
+      const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'), 10) || 24;
+
+      // Cantidad aleatoria de rectángulos (6 a 10)
+      const count = Math.floor(Math.random() * 5) + 6; // 6..10
+
+      // Generamos tamaños distintos en múltiplos de la cuadrícula (unidades de gap)
+      let sizesUnits = [];
+      for (let i = 0; i < count; i++) {
+        const base = 5 + i * 2; // 5,7,9,11,13,15
+        sizesUnits.push(base);
+      }
+
+      // Reducir tamaños si no caben en el canvas (ancho y alto), dejando 1 gap de margen
+      const minUnits = 3;
+      const maxWidthPx = canvas.width - 2 * gap; // 1 gap margen cada lado
+      const maxHeightPx = canvas.height - 2 * gap;
+
+      const totalWidthPx = (unitsArr) => unitsArr.reduce((acc, u, idx) => acc + u * gap - (idx === 0 ? 0 : gap), 0);
+      const maxHeightPxFn = (unitsArr) => Math.max(...unitsArr) * gap;
+
+      function fits(arr) {
+        return totalWidthPx(arr) <= maxWidthPx && maxHeightPxFn(arr) <= maxHeightPx;
+      }
+
+      let safety = 0;
+      while (!fits(sizesUnits) && safety < 100) {
+        // Reduce el mayor tamaño mientras siga por encima del mínimo
+        const maxIdx = sizesUnits.indexOf(Math.max(...sizesUnits));
+        if (sizesUnits[maxIdx] > minUnits) {
+          sizesUnits[maxIdx] -= 1;
+        } else {
+          // Si todos están en mínimo, salir para evitar bucle
+          break;
+        }
+        safety++;
+      }
+
+      const sizes = sizesUnits.map(u => u * gap);
+
+      // Posiciones alineadas a cuadrícula, todos tocándose entre sí
+      const positions = [];
+      const maxXCanvas = canvas.width - gap; // margen izquierdo/derecho
+      const maxYCanvas = canvas.height - gap; // margen superior/inferior
+
+      function clampToGrid(val, size) {
+        const max = maxXCanvas - size;
+        return Math.min(Math.max(Math.round(val / gap) * gap, gap), Math.round(max / gap) * gap);
+      }
+
+      // Primer cuadrado al azar
+      const firstSize = sizes[0];
+      const firstX = clampToGrid(Math.random() * (maxXCanvas - firstSize), firstSize);
+      const firstY = clampToGrid(Math.random() * (maxYCanvas - firstSize), firstSize);
+      positions.push({ x: firstX, y: firstY });
+
+      // Los siguientes deben tocar algún lado o esquina del anterior (o de uno ya colocado)
+      for (let i = 1; i < sizes.length; i++) {
+        const size = sizes[i];
+        let placed = false;
+        let attempts = 0;
+
+        while (!placed && attempts < 100) {
+          attempts++;
+          // Elegir un cuadrado ya colocado como referencia
+          const refIdx = Math.floor(Math.random() * positions.length);
+          const ref = positions[refIdx];
+          const refSize = sizes[refIdx];
+
+          // Direcciones posibles (incluye esquinas)
+          const dirs = [
+            { dx: -1, dy: 0 },  // izquierda
+            { dx: 1, dy: 0 },   // derecha
+            { dx: 0, dy: -1 },  // arriba
+            { dx: 0, dy: 1 },   // abajo
+            { dx: -1, dy: -1 }, // esquina sup izq
+            { dx: 1, dy: -1 },  // esquina sup der
+            { dx: -1, dy: 1 },  // esquina inf izq
+            { dx: 1, dy: 1 }    // esquina inf der
+          ];
+          const dir = dirs[Math.floor(Math.random() * dirs.length)];
+
+          // Calcular posición para que toque ref (alineado a cuadrícula)
+          let x = ref.x + dir.dx * (refSize - gap);
+          let y = ref.y + dir.dy * (refSize - gap);
+
+          // Si toca por lado, ajustar para que compartan línea
+          if (dir.dx === -1) x = ref.x - size + gap; // a la izquierda, comparte borde
+          if (dir.dx === 1) x = ref.x + refSize - gap; // a la derecha
+          if (dir.dy === -1) y = ref.y - size + gap; // arriba
+          if (dir.dy === 1) y = ref.y + refSize - gap; // abajo
+
+          x = clampToGrid(x, size);
+          y = clampToGrid(y, size);
+
+          // Validar que entra en canvas
+          if (x < 0 || y < 0 || x + size > maxXCanvas || y + size > maxYCanvas) continue;
+
+          // Evitar duplicar posición exacta (mismo x, y y tamaño)
+          const duplicates = positions.some((pos, idx) => pos.x === x && pos.y === y && sizes[idx] === size);
+          if (duplicates) continue;
+
+          // Evitar que quede completamente dentro de otro rectángulo
+          const insideAnother = positions.some((pos, idx) => {
+            const otherSize = sizes[idx];
+            const insideX = x >= pos.x && x + size <= pos.x + otherSize;
+            const insideY = y >= pos.y && y + size <= pos.y + otherSize;
+            return insideX && insideY;
+          });
+          if (insideAnother) continue;
+
+          positions.push({ x, y });
+          placed = true;
+        }
+
+        // Si no encontró posición (muy improbable), colócalo centrado
+        if (!placed) {
+          const fallbackX = clampToGrid((maxXCanvas - size) / 2, size);
+          const fallbackY = clampToGrid((maxYCanvas - size) / 2, size);
+          positions.push({ x: fallbackX, y: fallbackY });
+        }
+      }
+
+      const patterns = [
+        makePattern('stripes', 'rgba(31, 75, 153, 0.25)'),
+        makePattern('dots', 'rgba(220, 90, 70, 0.35)'),
+        makePattern('cross', 'rgba(43, 166, 128, 0.3)'),
+        makePattern('stripes', 'rgba(240, 180, 50, 0.25)'),
+        makePattern('dots', 'rgba(120, 90, 200, 0.3)'),
+        makePattern('cross', 'rgba(70, 160, 200, 0.28)')
+      ];
+
+      sizes.forEach((size, idx) => {
+        const pattern = patterns[idx % patterns.length];
+        const { x, y } = positions[idx];
+        ctx.fillStyle = pattern;
+        ctx.fillRect(x, y, size, size);
+        ctx.strokeRect(x, y, size, size);
+      });
+
+      ctx.restore();
+    }
+
+    drawSquares();
+  </script>
+</body>
+</html>
