@@ -70,6 +70,11 @@ const DIFFICULTY_CONFIG = {
         facil: { operations: 1 },
         media: { operations: 1 },
         dificil: { operations: 1 }
+    },
+    encadenados: {
+        facil: { operations: 1, initialDigits: 1, stepsMin: 2, stepsMax: 4, ops: ['+', '-'] },
+        media: { operations: 2, initialDigits: 2, stepsMin: 4, stepsMax: 4, ops: ['+', '-'] },
+        dificil: { operations: 3, initialDigits: 2, stepsMin: 6, stepsMax: 6, ops: ['+', '-', '×', '÷'] }
     }
 };
 
@@ -113,6 +118,11 @@ const GAME_INFO = {
         title: 'Cuadrado mágico',
         icon: '🔲',
         description: 'Rellena la cuadrícula para que todas las filas, columnas y diagonales sumen lo mismo.'
+    },
+    encadenados: {
+        title: 'Números encadenados',
+        icon: '🔗',
+        description: 'Aplica mentalmente una cadena de operaciones sobre un número inicial y escribe el resultado final.'
     }
 };
 
@@ -132,6 +142,12 @@ const MULT_DIV_POINTS = {
     facil: 4,
     media: 8,
     dificil: 12
+};
+
+const CHAIN_POINTS = {
+    facil: 1,
+    media: 3,
+    dificil: 5
 };
 
 const BASE_LOGIC_PUZZLES = {
@@ -482,6 +498,15 @@ function applyDigitMap(grid, digitMap) {
     return grid.map(row => row.map(cell => cell == null ? null : digitMap[cell]));
 }
 
+// Build nested expression tokens with parentheses for chained numbers
+function buildChainedTokens(start, steps) {
+    let expr = `${start}`;
+    steps.forEach(step => {
+        expr = `( ${expr} ${step.op} ${step.value} )`;
+    });
+    return expr.split(' ').filter(Boolean);
+}
+
 function generateSudokuPuzzle(difficulty) {
     const base = BASE_LOGIC_PUZZLES.sudoku[difficulty];
     const size = base.solution.length;
@@ -682,6 +707,7 @@ function buildScoringLines(type) {
     const isLogic = logicTypes.includes(type);
     const heavyTypes = ['multiplica_compleja', 'division', 'division_2dg'];
     const isHeavy = heavyTypes.includes(type);
+    const isChained = type === 'encadenados';
 
     return difficultyOrder.map(diff => {
         const cfg = config[diff.key];
@@ -694,6 +720,9 @@ function buildScoringLines(type) {
         } else if (isHeavy) {
             const basePoints = MULT_DIV_POINTS[diff.key];
             return `${diff.label}: ${basePoints} XP por cada operación correcta (${operations} operaciones).`;
+        } else if (isChained) {
+            const basePoints = CHAIN_POINTS[diff.key];
+            return `${diff.label}: ${basePoints} XP por cada resultado final correcto (${operations} cadenas).`;
         } else {
             const basePoints = POINTS_CONFIG[diff.key];
             if (type === 'multiplicacion') {
@@ -825,6 +854,55 @@ function generateOperations() {
                 intermediateSteps: intermediateSteps,
                 type: 'division_2dg'
             });
+        } else if (gameState.game.type === 'encadenados') {
+            // Números encadenados: generar cadena de operaciones sobre un número inicial
+            const startNumber = randomNumber(config.initialDigits);
+            const stepsCount = randomInRange(config.stepsMin, config.stepsMax);
+            const steps = [];
+            let current = startNumber;
+
+            for (let i = 0; i < stepsCount; i++) {
+                const op = config.ops[Math.floor(Math.random() * config.ops.length)];
+                let value = randomInRange(1, 9);
+
+                if (op === '+') {
+                    current += value;
+                } else if (op === '-') {
+                    if (current > 0) {
+                        value = Math.min(value, current);
+                    }
+                    current -= value;
+                } else if (op === '×') {
+                    value = randomInRange(2, 9);
+                    current *= value;
+                } else if (op === '÷') {
+                    value = randomInRange(2, 9);
+                    let attempts = 0;
+                    while (attempts < 10 && current % value !== 0) {
+                        value = randomInRange(2, 9);
+                        attempts++;
+                    }
+
+                    if (current % value === 0) {
+                        current = current / value;
+                    } else {
+                        // Si no se puede dividir exacto, usar una suma para mantener entero
+                        value = randomInRange(1, 9);
+                        current += value;
+                        steps.push({ op: '+', value });
+                        continue;
+                    }
+                }
+
+                steps.push({ op, value });
+            }
+
+            gameState.game.operations.push({
+                type: 'encadenados',
+                startNumber,
+                steps,
+                result: current
+            });
         } else if (gameState.game.type === 'sudoku') {
             const puzzle = generateSudokuPuzzle(gameState.game.difficulty);
             gameState.game.operations.push({ type: 'sudoku', puzzle });
@@ -880,6 +958,7 @@ function renderGameScreen() {
     else if (gameState.game.type === 'division_2dg') typeLabel = 'Divide 2dg';
     else if (gameState.game.type === 'sudoku') typeLabel = 'Sudoku lógico';
     else if (gameState.game.type === 'cuadrado_magico') typeLabel = 'Cuadrado mágico';
+    else if (gameState.game.type === 'encadenados') typeLabel = 'Números encadenados';
     else typeLabel = 'Tablas multiplicar';
 
     const diffLabel = gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1);
@@ -1137,6 +1216,20 @@ function renderOperation(operation, opIndex) {
         html += '</div>';
         html += '</div>';
 
+    } else if (operation.type === 'encadenados') {
+        html += '<div class="chain-container">';
+        html += '<div class="chain-header">Aplica la cadena de operaciones y escribe el resultado final</div>';
+        html += '<div class="chain-row">';
+
+        const expression = buildChainedTokens(operation.startNumber, operation.steps).join(' ');
+        html += `<div class="chain-expression-layer" aria-label="Enunciado encadenado">${expression}</div>`;
+
+        html += `<div class="chain-symbol">=</div>`;
+        html += `<input type="text" class="digit-input chain-result" maxlength="8" data-op-index="${opIndex}" pattern="[0-9]+" inputmode="numeric">`;
+
+        html += '</div>';
+        html += '</div>';
+
     } else {
         // Vertical layout for Suma/Resta
         const maxDigits = Math.max(...operation.numbers.map(n => String(n).length), String(operation.result).length);
@@ -1224,6 +1317,8 @@ function renderOperation(operation, opIndex) {
                     if (e.target.value.length > 0 && index < inputs.length - 1) {
                         inputs[index + 1].focus();
                     }
+                } else if (operation.type === 'encadenados') {
+                    // Solo un input principal; no navegación automática
                 } else {
                     // v4: Suma/Resta uses Right-to-Left navigation (units first)
                     if (e.target.value.length > 0 && index > 0) {
@@ -1516,6 +1611,12 @@ function finishGame() {
 
             isCorrect = allPartsCorrect;
 
+        } else if (operation.type === 'encadenados') {
+            const input = document.querySelector(`.digit-input[data-op-index="${opIndex}"]`);
+            const value = parseInt(input?.value || '', 10);
+            userAnswer = isNaN(value) ? null : value;
+            isCorrect = userAnswer === correctAnswer;
+
         } else {
             // Standard validation
             const inputs = document.querySelectorAll(`.digit-input[data-op-index="${opIndex}"]`);
@@ -1550,6 +1651,8 @@ function finishGame() {
         }
     } else if (gameState.game.type === 'sudoku' || gameState.game.type === 'cuadrado_magico') {
         points = totalCorrect === totalOps ? LOGIC_POINTS[gameState.game.difficulty] : 0;
+    } else if (gameState.game.type === 'encadenados') {
+        points = totalCorrect * CHAIN_POINTS[gameState.game.difficulty];
     } else if (specialMultiplyDivide.includes(gameState.game.type)) {
         points = totalCorrect * MULT_DIV_POINTS[gameState.game.difficulty];
     } else {
@@ -1622,6 +1725,13 @@ function showResults(results, totalCorrect, totalOps, points) {
                 userFormula = `Objetivo: ${magicSum}${renderMiniGrid(result.userAnswer, prefilled, result.correctAnswer)}`;
             }
 
+        } else if (gameState.game.type === 'encadenados') {
+            const expression = buildChainedTokens(result.operation.startNumber, result.operation.steps).join(' ');
+            correctFormula = `${expression} = ${result.correctAnswer}`;
+            if (!result.isCorrect) {
+                userFormula = `${expression} = ${result.userAnswer ?? ''}`;
+            }
+
         } else if (gameState.game.type === 'suma') {
             // Suma Feedback: Num1 + Num2 + ... = Result
             const nums = result.operation.numbers.join(' + ');
@@ -1655,6 +1765,16 @@ function showResults(results, totalCorrect, totalOps, points) {
             feedbackText = (gameState.game.type === 'sudoku' || gameState.game.type === 'cuadrado_magico')
                 ? `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula || 'Sin completar'})`
                 : `Respuesta correcta: ${correctFormula}<br>(Tu respuesta: ${userFormula})`;
+        }
+
+        // Formato específico para Números encadenados: mostrar enunciado = resultado
+        if (gameState.game.type === 'encadenados') {
+            const expression = buildChainedTokens(result.operation.startNumber, result.operation.steps).join(' ');
+            const correctLine = `${expression} = ${result.correctAnswer}`;
+            const userLine = `${expression} = ${result.userAnswer ?? ''}`;
+            feedbackText = result.isCorrect
+                ? correctLine
+                : `Respuesta correcta: ${correctLine}<br>(Tu respuesta: ${userLine})`;
         }
 
         feedbackDiv.innerHTML = `
@@ -1771,6 +1891,7 @@ function saveToHistory(totalCorrect, totalOps, points) {
                 gameState.game.type === 'multiplica_compleja' ? 'Multiplica' :
                     gameState.game.type === 'division' ? 'Divide' :
                         gameState.game.type === 'division_2dg' ? 'Divide 2dg' :
+                            gameState.game.type === 'encadenados' ? 'Números encadenados' :
                             gameState.game.type === 'sudoku' ? 'Sudoku lógico' :
                                 gameState.game.type === 'cuadrado_magico' ? 'Cuadrado mágico' : 'Tablas',
         difficulty: gameState.game.difficulty.charAt(0).toUpperCase() + gameState.game.difficulty.slice(1),
