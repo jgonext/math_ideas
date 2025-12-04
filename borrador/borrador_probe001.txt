@@ -50,5 +50,7 @@ AGREGAR:
 - Una vez constituida la figura por todos los rectangulos, 
     calcula el area de la figura teniendo en cuenta que 1 cuadro equivale a 1cm
 - Traza por log los pasos
+QUITAR:
+- El calculo del perimetro
 
 ---

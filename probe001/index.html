@@ -223,37 +223,13 @@
         rects.push({ x, y, w: size, h: size });
       });
 
-      const perimeter = computePerimeter(rects);
       const area = computeArea(rects, gap);
       const perimEl = document.getElementById('perimeter');
       const cmPerUnit = gap; // 1 cuadro = 1 cm
-      const perimeterCm = (perimeter / cmPerUnit).toFixed(2);
       const areaCm = area.toFixed(2);
-      perimEl.textContent = `Perímetro total: ${perimeter} px (${perimeterCm} cm) · Área: ${areaCm} cm²`;
+      perimEl.textContent = `Área: ${areaCm} cm²`;
 
       ctx.restore();
-    }
-
-    // Calcula el perímetro de la unión de rectángulos (anula bordes compartidos)
-    function computePerimeter(rects) {
-      const edgeMap = new Map();
-
-      const addEdge = (key, length) => {
-        if (edgeMap.has(key)) edgeMap.delete(key);
-        else edgeMap.set(key, length);
-      };
-
-      rects.forEach(({ x, y, w, h }) => {
-        addEdge(`H:${y}:${x}:${x + w}`, w);
-        addEdge(`H:${y + h}:${x}:${x + w}`, w);
-        addEdge(`V:${x}:${y}:${y + h}`, h);
-        addEdge(`V:${x + w}:${y}:${y + h}`, h);
-      });
-
-      let perimeter = 0;
-      edgeMap.forEach(len => { perimeter += len; });
-      console.log('Perímetro (px):', perimeter);
-      return perimeter;
     }
 
     // Calcula el área de la unión en cm² (1 cuadro = 1 cm)
