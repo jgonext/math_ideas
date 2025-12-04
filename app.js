@@ -864,17 +864,19 @@ function generateOperations() {
             for (let i = 0; i < stepsCount; i++) {
                 const op = config.ops[Math.floor(Math.random() * config.ops.length)];
                 let value = randomInRange(1, 9);
+                let candidate = current;
 
                 if (op === '+') {
-                    current += value;
+                    candidate = current + value;
                 } else if (op === '-') {
-                    if (current > 0) {
-                        value = Math.min(value, current);
+                    candidate = current - value;
+                    if (candidate < 0) {
+                        value = 0;       // v26: evitar negativos, usa 0 como segundo número
+                        candidate = current;
                     }
-                    current -= value;
                 } else if (op === '×') {
                     value = randomInRange(2, 9);
-                    current *= value;
+                    candidate = current * value;
                 } else if (op === '÷') {
                     value = randomInRange(2, 9);
                     let attempts = 0;
@@ -884,15 +886,18 @@ function generateOperations() {
                     }
 
                     if (current % value === 0) {
-                        current = current / value;
+                        candidate = current / value;
                     } else {
                         // Si no se puede dividir exacto, usar una suma para mantener entero
                         value = randomInRange(1, 9);
-                        current += value;
+                        candidate = current + value;
                         steps.push({ op: '+', value });
+                        current = candidate;
                         continue;
                     }
                 }
+
+                current = candidate;
 
                 steps.push({ op, value });
             }
