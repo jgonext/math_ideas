@@ -527,6 +527,18 @@ MODIFICAR juego "Calcula áreas":
 	- Medio: 2 figuras compuestas por 8 rectangulos que no tengan menos de 3 ni de ancho ni de alto; 3 puntos por acierto
 	- Difícil: 2 figuras compuestas por 20 rectangulos que no tengan menos de 2 de ancho y que no tenga menos de 4 de alto; 5 puntos por acierto
 
+
+---
+
+[v31]
+
+FIX la caja de texto de un cuadro debe volver a tener un width de 45px en general, 
+	pero SOLO para el juego de "Calcula áreas" debe tener un width de 200px
+FIX solo para juego "Calcula áreas" crea y usa para la caja de texto un estilo custom "digit-input-calcula"
+	que tenga las misma propiedades que "digit-input" pero que tenga width=200px
+FIX en juego "Calcula áreas" debido al uso de "digit-input-calcula" ahora 
+	la aplicación no encuentra la caja de texto con la respuesta
+
 ---
 
 Propuestas a futuro:
