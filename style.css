@@ -936,7 +936,7 @@ body {
 }
 
 .area-result {
-    width: 220px;
+    width: 200px;
     max-width: 100%;
     padding: 10px 14px;
     font-size: 1.1rem;
@@ -1014,6 +1014,19 @@ body {
 }
 
 .digit-input {
+    width: 45px;
+    height: 55px;
+    border: 2px solid var(--primary-color);
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    border-radius: var(--radius-sm);
+    background: white;
+    transition: all var(--transition-fast);
+}
+
+.digit-input-calcula {
     width: 200px;
     height: 55px;
     border: 2px solid var(--primary-color);
