@@ -847,6 +847,68 @@ body {
     text-align: center;
 }
 
+.chain-container {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.chain-header {
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.chain-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.chain-expression-layer {
+    min-width: 280px;
+    max-width: 100%;
+    padding: 12px 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: #f7fafc;
+    font-family: 'Courier New', monospace;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.5;
+}
+
+.chain-symbol {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 20px;
+    text-align: center;
+}
+
+.chain-result {
+    width: auto;
+    min-width: 120px;
+    padding: 10px 14px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+}
+
+.chain-start {
+    background: #eef2ff;
+    border-color: var(--primary-color);
+}
+
 .operation-symbol {
     font-size: 2rem;
     font-weight: bold;

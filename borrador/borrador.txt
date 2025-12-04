@@ -436,6 +436,35 @@ MODIFICAR juegos de lógica -> Sudoku logico
 
 ---
 
+[v24]
+
+AGREGAR nuevo juego "Números encadenados":
+- Se da un número inicial y una cadena de operaciones (+3, ×2, −5, ÷2, etc).
+- El jugador debe calcular el resultado final mentalmente.
+- Dificultad:
+	- Fácil: Numero inicial de 1 digito; cadena de 2 a 4 sumas/restas de 1 digito; 1 elemento; cada acierto 1 punto
+	- Medio: Numero inicial de 2 digitos; cadena de 4 sumas/restas de 1 digito; 2 elementos; cada acierto 3 puntos
+	- Difícil: Numero inicial de 2 digitos; cadena de 6 sumas/restas/multiplicaciones/divisiones de 1 digito; 3 elementos; cada acierto 5 puntos
+
+---
+
+[v25]
+
+MODIFICAR juego "Números encadenados":
+- Dificultad:
+	- Fácil: Numero inicial de 1 digito; cadena de 2 a 4 sumas/restas de 1 digito, en ningun paso de la cadena puede dar numero negativo; 1 elemento; cada acierto 1 punto
+	- Medio: Numero inicial de 2 digitos; cadena de 4 sumas/restas de 1 digito, en ningun paso de la cadena puede dar numero negativo; 2 elementos; cada acierto 3 puntos
+	- Difícil: Numero inicial de 2 digitos; cadena de 6 sumas/restas/multiplicaciones/divisiones de 1 digito, en ningun paso de la cadena puede dar numero negativo; 3 elementos; cada acierto 5 puntos
+- Desde numero base hasta fin de la cadena hay que poner parentesis a cada paso. Es decir, si tenemos esto: 4 + 2 - 3 x 5
+	se convierte en: ( ( ( 4 + 2 ) - 3 ) x 5 )
+- En vez de cuadros, simplemente escribe el enunciado en una caja de texto
+- Al pulsar Finalizar, el feedback será:
+	- Si correcto: enunciado = resultado
+	- Si incorrecto: además, enunciado = lo que respondió el usuario
+- Haz los cambios visuales que creas necesarios para que el enunciado se vea entero siempre. Seguramente haya que quitar la caja de texto y reemplazarla por un layer.
+
+---
+
 Propuestas a futuro:
 - Mejorar el sistema de Recompensas
 - Incorporar otros Avatar de usuario
