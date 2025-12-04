@@ -519,6 +519,16 @@ MODIFICAR juego "Calcula áreas":
 
 ---
 
+[v30]
+
+MODIFICAR juego "Calcula áreas":
+- Dificultad:
+	- Fácil: 1 figuras compuestas por 4 rectangulos que no tengan menos de 4 ni de ancho ni de alto; 1 puntos por acierto
+	- Medio: 2 figuras compuestas por 8 rectangulos que no tengan menos de 3 ni de ancho ni de alto; 3 puntos por acierto
+	- Difícil: 2 figuras compuestas por 20 rectangulos que no tengan menos de 2 de ancho y que no tenga menos de 4 de alto; 5 puntos por acierto
+
+---
+
 Propuestas a futuro:
 - Mejorar el sistema de Recompensas
 - Incorporar otros Avatar de usuario
