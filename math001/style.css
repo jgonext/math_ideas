@@ -909,6 +909,39 @@ body {
     border-color: var(--primary-color);
 }
 
+.area-figure {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.area-canvas {
+    background: white;
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.area-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    font-weight: 700;
+}
+
+.perimeter-label {
+    text-align: center;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.area-result {
+    width: 220px;
+    max-width: 100%;
+    padding: 10px 14px;
+    font-size: 1.1rem;
+}
+
 .operation-symbol {
     font-size: 2rem;
     font-weight: bold;
@@ -981,7 +1014,7 @@ body {
 }
 
 .digit-input {
-    width: 45px;
+    width: 200px;
     height: 55px;
     border: 2px solid var(--primary-color);
     text-align: center;
