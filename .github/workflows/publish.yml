@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - "CHANGELOG.md"
+
+permissions:
+  contents: write
 
 jobs:
   publish:
@@ -13,20 +18,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # necesario para leer tags
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      # --------------------------
-      # 1) Obtener último tag
-      # --------------------------
       - name: Obtener último tag
         id: lasttag
         run: |
           TAG=$(git tag --sort=-v:refname | head -n 1)
           echo "last_tag=$TAG" >> $GITHUB_ENV
 
-      # --------------------------
-      # 2) Calcular nueva versión
-      # --------------------------
       - name: Calcular nueva versión vX.0.0
         id: version
         run: |
@@ -40,9 +40,6 @@ jobs:
           echo "new_tag=$NEW" >> $GITHUB_ENV
           echo "Nueva versión: $NEW"
 
-      # --------------------------
-      # 3) Generar CHANGELOG.md automático
-      # --------------------------
       - name: Generar CHANGELOG.md
         run: |
           git config user.email "actions@github.com"
@@ -50,7 +47,6 @@ jobs:
 
           echo "Generando CHANGELOG.md..."
 
-          # Identificar rango de commits
           if [ -z "${{ env.last_tag }}" ]; then
             COMMITS=$(git log --pretty=format:"* %s (%h)")
           else
@@ -59,7 +55,6 @@ jobs:
 
           DATE=$(date +"%Y-%m-%d")
 
-          # Crear bloque nuevo de changelog
           {
             echo "## ${{ env.new_tag }} — $DATE"
             echo ""
@@ -68,7 +63,6 @@ jobs:
             echo ""
           } > NEW_CHANGELOG.md
 
-          # Concatenar con CHANGELOG.md si ya existe
           if [ -f CHANGELOG.md ]; then
             cat CHANGELOG.md >> NEW_CHANGELOG.md
           fi
@@ -76,30 +70,21 @@ jobs:
           mv NEW_CHANGELOG.md CHANGELOG.md
 
           git add CHANGELOG.md
-          git commit -m "Actualiza CHANGELOG para ${{ env.new_tag }}"
-          git push origin master
+          git commit -m "Actualiza CHANGELOG para ${{ env.new_tag }}" || true
+          echo "Commit creado, sin push para evitar loop."
 
-      # --------------------------
-      # 4) Publicar en gh-pages usando subtree
-      # --------------------------
       - name: Actualizar rama gh-pages
         run: |
           git subtree split --prefix=math001 -b temp-gh-pages
           git push -f origin temp-gh-pages:gh-pages
           git branch -D temp-gh-pages
 
-      # --------------------------
-      # 5) Crear y subir nuevo tag
-      # --------------------------
       - name: Crear y subir nuevo tag
         run: |
           git tag ${{ env.new_tag }}
           git push origin ${{ env.new_tag }}
 
-      # --------------------------
-      # 6) Resumen final
-      # --------------------------
-      - name: Resumen publicación
+      - name: Resumen final
         run: |
           echo "Publicación completada."
           echo "Versión generada: ${{ env.new_tag }}"
